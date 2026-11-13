@@ -61,6 +61,8 @@ class MainActivity : ComponentActivity() {
 
                         MainMenuScreen(
                             theme = themeState,
+                            prefs = prefs,
+                            soundEngine = soundEngine,
                             highScore = best,
                             coins = coins,
                             totalStars = stars,
@@ -85,6 +87,9 @@ class MainActivity : ComponentActivity() {
                                 themeState = chosen
                                 prefs.selectedTheme = chosen
                                 soundEngine.playTap()
+                            },
+                            onCoinsChanged = {
+                                refreshKey++
                             },
                             onStartClassic = {
                                 soundEngine.playTap()

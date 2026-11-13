@@ -51,6 +51,7 @@ import com.hnmlabs.sandblock.model.AdventureCatalog
 import com.hnmlabs.sandblock.model.AdventureLevel
 import com.hnmlabs.sandblock.model.BoosterType
 import com.hnmlabs.sandblock.model.GameTheme
+import com.hnmlabs.sandblock.ui.components.ShopDialog
 import com.hnmlabs.sandblock.ui.stage.HudSnapshot
 import com.hnmlabs.sandblock.ui.stage.SandStageView
 
@@ -78,6 +79,7 @@ fun GameScreen(
 
     var stageRef by remember { mutableStateOf<SandStageView?>(null) }
     var isPaused by remember { mutableStateOf(false) }
+    var isShopOpen by remember { mutableStateOf(false) }
     var activeTargetBooster by remember { mutableStateOf<BoosterType?>(null) }
     var inventoryTick by remember { mutableIntStateOf(0) }
 
@@ -100,12 +102,14 @@ fun GameScreen(
     var sessionFinalized by remember(sessionKey) { mutableStateOf(false) }
     var wonStarsDisplay by remember(sessionKey) { mutableIntStateOf(0) }
     var earnedSessionCoins by remember(sessionKey) { mutableIntStateOf(0) }
+    var liveEarnedCoinsInRun by remember(sessionKey) { mutableIntStateOf(0) }
     var isNewHighScore by remember(sessionKey) { mutableStateOf(false) }
 
     fun restartGame(nextLevel: AdventureLevel? = currentLevel) {
         currentLevel = nextLevel
         activeTargetBooster = null
         isPaused = false
+        isShopOpen = false
         if (nextLevel != null) {
             world.startAdventure(nextLevel)
         } else {
@@ -132,19 +136,20 @@ fun GameScreen(
         if (!sessionFinalized && hud.status != GameStatus.PLAYING) {
             sessionFinalized = true
             activeTargetBooster = null
+            isShopOpen = false
             stageRef?.activeTargetBooster = null
 
             val lvl = currentLevel
             if (hud.status == GameStatus.WON && lvl != null) {
                 val stars = hud.wonStars.coerceIn(1, 3)
                 wonStarsDisplay = stars
-                val firstClear = prefs.recordLevelWin(
+                val bonusAwarded = prefs.recordLevelWin(
                     levelNumber = lvl.number,
                     stars = stars,
                     rewardCoins = lvl.rewardCoins,
                     rewardBooster = lvl.rewardBooster
                 )
-                earnedSessionCoins = if (firstClear) lvl.rewardCoins else (lvl.rewardCoins / 3).coerceAtLeast(10)
+                earnedSessionCoins = liveEarnedCoinsInRun + bonusAwarded
                 inventoryTick++
             } else if (hud.status == GameStatus.GAME_OVER) {
                 if (lvl == null) {
@@ -152,26 +157,34 @@ fun GameScreen(
                         isNewHighScore = true
                         prefs.highScore = hud.score
                     }
-                    val bonusCoins = (hud.score / 55).coerceAtLeast(if (hud.score >= 150) 5 else 0)
-                    if (bonusCoins > 0) {
-                        prefs.coins += bonusCoins
-                        earnedSessionCoins = bonusCoins
-                        inventoryTick++
-                    }
+                    val endBonusRaw = (hud.score / 80).coerceAtLeast(if (hud.score >= 150) 4 else 0)
+                    val endBonus = prefs.awardLiveCoins(endBonusRaw)
+                    earnedSessionCoins = liveEarnedCoinsInRun + endBonus
+                    inventoryTick++
+                } else {
+                    earnedSessionCoins = liveEarnedCoinsInRun
                 }
             }
         }
     }
 
     BackHandler {
-        if (activeTargetBooster != null) {
-            activeTargetBooster = null
-            stageRef?.activeTargetBooster = null
-        } else if (!isPaused && hud.status == GameStatus.PLAYING) {
-            isPaused = true
-            stageRef?.isGamePaused = true
-        } else {
-            if (currentLevel != null) onExitToAdventureMap() else onExitToMenu()
+        when {
+            isShopOpen -> {
+                isShopOpen = false
+                stageRef?.isGamePaused = isPaused
+            }
+            activeTargetBooster != null -> {
+                activeTargetBooster = null
+                stageRef?.activeTargetBooster = null
+            }
+            !isPaused && hud.status == GameStatus.PLAYING -> {
+                isPaused = true
+                stageRef?.isGamePaused = true
+            }
+            else -> {
+                if (currentLevel != null) onExitToAdventureMap() else onExitToMenu()
+            }
         }
     }
 
@@ -181,8 +194,8 @@ fun GameScreen(
     )
     val accent = Color(activeTheme.accentColor)
     val cardColor = Color(activeTheme.surfaceCard)
+    val goldColor = Color(0xFFFFD166)
 
-    // Read current inventory reactive to inventoryTick
     val currentCoins = remember(inventoryTick, hud.score) { prefs.coins }
     val currentBest = remember(hud.score, sessionKey) {
         maxOf(prefs.highScore, if (currentLevel == null) hud.score else 0)
@@ -198,7 +211,7 @@ fun GameScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 6.dp),
+                .padding(horizontal = 12.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -227,12 +240,12 @@ fun GameScreen(
                 if (lvl == null) {
                     Text(
                         text = "${hud.score}",
-                        fontSize = 26.sp,
+                        fontSize = 25.sp,
                         fontWeight = FontWeight.Black,
                         color = Color.White
                     )
                     Text(
-                        text = "🏆 REKOR: $currentBest  •  HAT: ${hud.linesCleared}",
+                        text = "🏆 $currentBest  •  HAT: ${hud.linesCleared}",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = accent
@@ -243,31 +256,55 @@ fun GameScreen(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = accent,
-                        letterSpacing = 0.8.sp
+                        letterSpacing = 0.6.sp
                     )
                     Text(
                         text = "${hud.score} / ${lvl.targetScore}",
-                        fontSize = 22.sp,
+                        fontSize = 21.sp,
                         fontWeight = FontWeight.Black,
                         color = Color.White
                     )
                 }
             }
 
-            // Coins & Combo Pill
+            // Interactive Gold & In-Game Shop Button!
             Column(horizontalAlignment = Alignment.End) {
                 Surface(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(enabled = hud.status == GameStatus.PLAYING) {
+                            soundEngine.playTap()
+                            activeTargetBooster = null
+                            stageRef?.activeTargetBooster = null
+                            isShopOpen = true
+                            stageRef?.isGamePaused = true
+                        },
                     color = cardColor,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, accent.copy(alpha = 0.4f))
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.4.dp, goldColor.copy(alpha = 0.75f))
                 ) {
-                    Text(
-                        text = "🪙 $currentCoins",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFD166)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Text(
+                            text = "🛒",
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = "🪙 $currentCoins",
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = goldColor
+                        )
+                        Text(
+                            text = "+",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Black,
+                            color = accent
+                        )
+                    }
                 }
                 if (hud.combo >= 2) {
                     Text(
@@ -286,7 +323,7 @@ fun GameScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 2.dp)
+                    .padding(horizontal = 14.dp, vertical = 2.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -328,12 +365,12 @@ fun GameScreen(
             }
         }
 
-        // 3. Interactive Booster Bar
+        // 3. 5-Slot Interactive Power-Up & Quick-Buy Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             BoosterType.entries.forEach { booster ->
                 val count = remember(inventoryTick) { prefs.getBoosterCount(booster) }
@@ -351,48 +388,79 @@ fun GameScreen(
                                 soundEngine.playTap()
                                 return@clickable
                             }
-                            if (!canAfford) return@clickable
 
-                            if (booster == BoosterType.RAINBOW_UPGRADE) {
-                                val upgradedSlot = world.upgradeTrayPieceToRainbow()
-                                if (upgradedSlot >= 0 && prefs.consumeOrBuyBooster(booster)) {
-                                    activeTargetBooster = null
-                                    stageRef?.activeTargetBooster = null
-                                    soundEngine.playMagic()
-                                    inventoryTick++
-                                    stageRef?.invalidate()
-                                }
-                            } else {
-                                activeTargetBooster = booster
-                                stageRef?.activeTargetBooster = booster
+                            // If player has 0 of this item and not enough coins, open Shop to show catalog!
+                            if (!canAfford) {
                                 soundEngine.playTap()
+                                isShopOpen = true
+                                stageRef?.isGamePaused = true
+                                return@clickable
+                            }
+
+                            when (booster) {
+                                BoosterType.RAINBOW_UPGRADE -> {
+                                    val upgradedSlot = world.upgradeTrayPieceToRainbow()
+                                    if (upgradedSlot >= 0 && prefs.consumeOrBuyBooster(booster)) {
+                                        activeTargetBooster = null
+                                        stageRef?.activeTargetBooster = null
+                                        soundEngine.playMagic()
+                                        inventoryTick++
+                                        stageRef?.invalidate()
+                                    }
+                                }
+                                BoosterType.REROLL_TRAY -> {
+                                    if (world.rerollTray() && prefs.consumeOrBuyBooster(booster)) {
+                                        activeTargetBooster = null
+                                        stageRef?.activeTargetBooster = null
+                                        soundEngine.playCoinPurchase()
+                                        inventoryTick++
+                                        stageRef?.invalidate()
+                                    }
+                                }
+                                BoosterType.BOMB,
+                                BoosterType.ROW_LASER,
+                                BoosterType.COLOR_CLEANER -> {
+                                    activeTargetBooster = booster
+                                    stageRef?.activeTargetBooster = booster
+                                    soundEngine.playTap()
+                                }
                             }
                         },
-                    color = if (isSelected) accent.copy(alpha = 0.30f) else cardColor.copy(alpha = 0.88f),
+                    color = if (isSelected) accent.copy(alpha = 0.30f) else cardColor.copy(alpha = 0.90f),
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(
                         width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) accent else Color.White.copy(alpha = if (canAfford) 0.22f else 0.08f)
+                        color = if (isSelected) accent else Color.White.copy(alpha = if (canAfford) 0.22f else 0.10f)
                     )
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 5.dp, horizontal = 3.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = "${booster.emoji} ${booster.titleTr}",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White.copy(alpha = if (canAfford) 1f else 0.4f),
-                            maxLines = 1
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = booster.emoji,
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = booster.shortTitleTr,
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White.copy(alpha = if (canAfford) 1f else 0.48f),
+                                maxLines = 1
+                            )
+                        }
                         val badgeText = if (count > 0) "x$count" else "🪙${booster.coinCost}"
                         Text(
                             text = badgeText,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (count > 0) accent else Color(0xFFFFD166).copy(alpha = if (canAfford) 0.9f else 0.4f)
+                            color = if (count > 0) accent else goldColor.copy(alpha = if (canAfford) 0.95f else 0.45f)
                         )
                     }
                 }
@@ -412,6 +480,12 @@ fun GameScreen(
                     onHudUpdated = { snapshot ->
                         hud = snapshot
                     },
+                    onLiveCoinsEarned = { rawCoins ->
+                        val awarded = prefs.awardLiveCoins(rawCoins)
+                        liveEarnedCoinsInRun += awarded
+                        inventoryTick++
+                        awarded
+                    },
                     onTargetBoosterExecuted = { usedBooster ->
                         prefs.consumeOrBuyBooster(usedBooster)
                         activeTargetBooster = null
@@ -422,14 +496,37 @@ fun GameScreen(
                 }
             },
             update = { view ->
-                view.isGamePaused = isPaused
+                view.isGamePaused = isPaused || isShopOpen
                 view.activeTargetBooster = activeTargetBooster
             }
         )
     }
 
+    // In-Game Gold Shop Dialog!
+    if (isShopOpen && hud.status == GameStatus.PLAYING) {
+        ShopDialog(
+            theme = activeTheme,
+            prefs = prefs,
+            soundEngine = soundEngine,
+            inActiveGame = true,
+            canSweepSandNow = world.highestSandRow() < world.height - 6,
+            onExecuteSandSweep = {
+                val cleared = world.clearTopDangerSand()
+                stageRef?.invalidate()
+                cleared > 0
+            },
+            onPurchaseChanged = {
+                inventoryTick++
+            },
+            onDismiss = {
+                isShopOpen = false
+                stageRef?.isGamePaused = isPaused
+            }
+        )
+    }
+
     // Pause Overlay Dialog
-    if (isPaused && hud.status == GameStatus.PLAYING) {
+    if (isPaused && !isShopOpen && hud.status == GameStatus.PLAYING) {
         PauseDialog(
             theme = activeTheme,
             soundEnabled = prefs.soundEnabled,
@@ -445,6 +542,10 @@ fun GameScreen(
                 prefs.hapticsEnabled = next
                 soundEngine.hapticsEnabled = next
                 inventoryTick++
+            },
+            onOpenShop = {
+                isPaused = false
+                isShopOpen = true
             },
             onResume = {
                 isPaused = false
@@ -497,6 +598,7 @@ private fun PauseDialog(
     hapticsEnabled: Boolean,
     onToggleSound: () -> Unit,
     onToggleHaptics: () -> Unit,
+    onOpenShop: () -> Unit,
     onResume: () -> Unit,
     onRestart: () -> Unit,
     onQuit: () -> Unit
@@ -513,7 +615,7 @@ private fun PauseDialog(
                     .fillMaxWidth()
                     .padding(22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(11.dp)
             ) {
                 Text(
                     text = "⏸ OYUN DURAKLATILDI",
@@ -562,6 +664,17 @@ private fun PauseDialog(
                     )
                 ) {
                     Text("▶ Devam Et", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                }
+
+                OutlinedButton(
+                    onClick = onOpenShop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.2.dp, Color(0xFFFFD166).copy(alpha = 0.75f))
+                ) {
+                    Text("🛒 Altın Mağazası", color = Color(0xFFFFD166), fontWeight = FontWeight.Bold)
                 }
 
                 OutlinedButton(
@@ -643,7 +756,7 @@ private fun VictoryDialog(
                 ) {
                     Text(
                         text = buildString {
-                            append("Ödül: 🪙 +$earnedCoins")
+                            append("Kazanılan Altın: 🪙 +$earnedCoins")
                             level.rewardBooster?.let { append("  •  ${it.emoji} ${it.titleTr}") }
                         },
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
@@ -758,7 +871,7 @@ private fun GameOverDialog(
 
                 if (earnedCoins > 0) {
                     Text(
-                        text = "Kazanılan Altın: 🪙 +$earnedCoins",
+                        text = "Bu Oyunda Kazanılan Altın: 🪙 +$earnedCoins",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFFFD166)

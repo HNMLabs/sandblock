@@ -161,4 +161,56 @@ class SandWorldTest {
             assertFalse("Initial preset sand/stones must not breach danger line", world.highestSandRow() < world.dangerRow)
         }
     }
+
+    @Test
+    fun `horizontal laser cuts full row band and awards score`() {
+        val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 4, random = Random(8))
+        world.startClassic(GameTheme.NEON)
+
+        for (y in 20..26) {
+            for (x in 0 until world.width) {
+                world.cellTypes[y * world.width + x] = SandWorld.CELL_SAND
+            }
+        }
+
+        val destroyed = world.fireHorizontalLaser(centerY = 23, halfBand = 2)
+        assertEquals(24 * 5, destroyed)
+        for (x in 0 until world.width) {
+            assertEquals(SandWorld.CELL_EMPTY, world.cellTypes[23 * world.width + x])
+        }
+    }
+
+    @Test
+    fun `sand storm clears topmost dangerous sand rows and reroll refreshes tray`() {
+        val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 4, random = Random(9))
+        world.startClassic(GameTheme.SAHARA)
+
+        val oldUids = world.trayPieces.map { it?.uid }
+        assertTrue(world.rerollTray())
+        val newUids = world.trayPieces.map { it?.uid }
+        assertFalse(oldUids == newUids)
+
+        // Place sand at rows 10..20
+        for (y in 10..20) {
+            world.cellTypes[y * world.width + 5] = SandWorld.CELL_SAND
+        }
+        val swept = world.clearTopDangerSand(rowsToClear = 5)
+        assertEquals(5, swept)
+        assertEquals(15, world.highestSandRow())
+    }
+
+    @Test
+    fun `line clear emits live gold coins reward`() {
+        val world = SandWorld(width = 20, height = 24, grainScale = 4, dangerRow = 4, random = Random(10))
+        world.startClassic(GameTheme.PASTEL)
+
+        for (x in 0 until world.width) {
+            world.cellTypes[(world.height - 1) * world.width + x] = SandWorld.CELL_SAND
+            world.colorIndices[(world.height - 1) * world.width + x] = 1
+        }
+
+        assertTrue(world.detectAndBeginLineClear())
+        val clearEvent = world.drainEvents().filterIsInstance<WorldEvent.LineClearStarted>().single()
+        assertTrue("Line clear should award live coins while playing", clearEvent.coinsAwarded >= 6)
+    }
 }

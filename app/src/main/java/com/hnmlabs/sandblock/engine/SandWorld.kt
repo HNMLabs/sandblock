@@ -21,7 +21,8 @@ sealed interface WorldEvent {
         val centerX: Float,
         val centerY: Float,
         val colorArgb: Int,
-        val pointsAwarded: Int
+        val pointsAwarded: Int,
+        val coinsAwarded: Int
     ) : WorldEvent
     data class BombExploded(
         val centerX: Float,
@@ -29,9 +30,19 @@ sealed interface WorldEvent {
         val destroyedGrains: Int,
         val pointsAwarded: Int
     ) : WorldEvent
+    data class LaserFired(
+        val centerY: Float,
+        val destroyedGrains: Int,
+        val pointsAwarded: Int
+    ) : WorldEvent
     data class ColorCleaned(
         val colorIndex: Int,
         val colorArgb: Int,
+        val destroyedGrains: Int,
+        val pointsAwarded: Int
+    ) : WorldEvent
+    data class SandStormCleared(
+        val topY: Float,
         val destroyedGrains: Int,
         val pointsAwarded: Int
     ) : WorldEvent
@@ -179,6 +190,12 @@ class SandWorld(
         val current = trayPieces[targetSlot] ?: return -1
         trayPieces[targetSlot] = pieceGenerator.upgradePieceToRainbow(current)
         return targetSlot
+    }
+
+    fun rerollTray(): Boolean {
+        if (status != GameStatus.PLAYING) return false
+        refillTray()
+        return true
     }
 
     fun canPlaceShape(shape: BlockShape, originX: Int, originY: Int): Boolean {
@@ -407,6 +424,83 @@ class SandWorld(
                 WorldEvent.ColorCleaned(
                     colorIndex = colorIndex,
                     colorArgb = argb,
+                    destroyedGrains = destroyed,
+                    pointsAwarded = pts
+                )
+            )
+        }
+        return destroyed
+    }
+
+    fun fireHorizontalLaser(centerY: Int, halfBand: Int = 5): Int {
+        if (status != GameStatus.PLAYING) return 0
+        val minY = (centerY - halfBand).coerceAtLeast(0)
+        val maxY = (centerY + halfBand).coerceAtMost(height - 1)
+        var destroyed = 0
+        val crackedMacrosHit = HashSet<Int>()
+
+        for (y in minY..maxY) {
+            val rowBase = y * width
+            for (x in 0 until width) {
+                val idx = rowBase + x
+                val t = cellTypes[idx]
+                if (t != CELL_EMPTY) {
+                    if (t == CELL_CRACKED_STONE) {
+                        crackedMacrosHit.add((y / grainScale) * 100 + (x / grainScale))
+                    }
+                    cellTypes[idx] = CELL_EMPTY
+                    clearMask[idx] = false
+                    destroyed++
+                }
+            }
+        }
+
+        for (macroKey in crackedMacrosHit) {
+            val mRow = macroKey / 100
+            val mCol = macroKey % 100
+            destroyed += destroyMacroStone(mCol, mRow, CELL_CRACKED_STONE)
+        }
+
+        val pts = destroyed * 2 + 95
+        score += pts
+        settleQuietTicks = 0
+        pendingEvents.add(
+            WorldEvent.LaserFired(
+                centerY = centerY.coerceIn(0, height - 1).toFloat(),
+                destroyedGrains = destroyed,
+                pointsAwarded = pts
+            )
+        )
+        return destroyed
+    }
+
+    fun clearTopDangerSand(rowsToClear: Int = 28): Int {
+        if (status != GameStatus.PLAYING) return 0
+        val topRow = highestSandRow()
+        if (topRow >= height) return 0
+        val endRow = (topRow + rowsToClear).coerceAtMost(height)
+        var destroyed = 0
+
+        for (y in topRow until endRow) {
+            val rowBase = y * width
+            for (x in 0 until width) {
+                val idx = rowBase + x
+                val t = cellTypes[idx]
+                if (t == CELL_SAND || t == CELL_RAINBOW) {
+                    cellTypes[idx] = CELL_EMPTY
+                    clearMask[idx] = false
+                    destroyed++
+                }
+            }
+        }
+
+        if (destroyed > 0) {
+            val pts = destroyed * 2 + 120
+            score += pts
+            settleQuietTicks = 0
+            pendingEvents.add(
+                WorldEvent.SandStormCleared(
+                    topY = ((topRow + endRow) * 0.5f),
                     destroyedGrains = destroyed,
                     pointsAwarded = pts
                 )
@@ -644,6 +738,8 @@ class SandWorld(
         val awarded = (basePoints * comboMultiplier).toInt().coerceAtLeast(100)
         score += awarded
 
+        val rawCoins = 6 + (combo - 1) * 5 + crackedMacrosToBreak.size * 4 + (sandClearCount / 90)
+
         val avgX = if (sandClearCount > 0) (sumX.toFloat() / sandClearCount) else width / 2f
         val avgY = if (sandClearCount > 0) (sumY.toFloat() / sandClearCount) else height / 2f
 
@@ -656,7 +752,8 @@ class SandWorld(
                 centerX = avgX,
                 centerY = avgY,
                 colorArgb = dominantColorArgb,
-                pointsAwarded = awarded
+                pointsAwarded = awarded,
+                coinsAwarded = rawCoins
             )
         )
         return true

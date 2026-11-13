@@ -45,6 +45,7 @@ class SandStageView(
     val world: SandWorld,
     private val soundEngine: AsmrSoundEngine,
     private val onHudUpdated: (HudSnapshot) -> Unit,
+    private val onLiveCoinsEarned: (Int) -> Int,
     private val onTargetBoosterExecuted: (BoosterType) -> Unit
 ) : View(context), Choreographer.FrameCallback {
 
@@ -75,6 +76,12 @@ class SandStageView(
         var y: Float = 0f,
         var maxRadius: Float = 100f,
         var color: Int = 0xFFFFB703.toInt(),
+        var life: Float = 0f,
+        var active: Boolean = false
+    )
+
+    private class LaserBeamFx(
+        var y: Float = 0f,
         var life: Float = 0f,
         var active: Boolean = false
     )
@@ -110,6 +117,7 @@ class SandStageView(
     private val particles = Array(280) { Particle() }
     private val popups = Array(16) { FloatingPopup() }
     private val shockwaves = Array(6) { ShockwaveRing() }
+    private val laserBeams = Array(4) { LaserBeamFx() }
     private val fxRandom = Random.Default
 
     var isGamePaused: Boolean = false
@@ -254,13 +262,14 @@ class SandStageView(
                 }
                 is WorldEvent.LineClearStarted -> {
                     soundEngine.playLineClear(ev.combo)
+                    val awardedGold = onLiveCoinsEarned(ev.coinsAwarded)
                     val sx = gridToScreenX(ev.centerX)
                     val sy = gridToScreenY(ev.centerY)
                     spawnBurst(sx, sy, ev.colorArgb, count = 48, speed = 210f * density)
                     val label = if (ev.combo >= 2) {
-                        "KOMBO x${ev.combo}! +${ev.pointsAwarded}"
+                        "KOMBO x${ev.combo}! +${ev.pointsAwarded}  🪙+$awardedGold"
                     } else {
-                        "+${ev.pointsAwarded}"
+                        "+${ev.pointsAwarded}  🪙+$awardedGold"
                     }
                     spawnPopup(label, sx, sy, if (ev.combo >= 2) 0xFFFFEA00.toInt() else 0xFFFFFFFF.toInt())
                     if (ev.crackedBlocksBroken > 0) {
@@ -281,6 +290,19 @@ class SandStageView(
                     spawnBurst(sx, sy, 0xFFFF9F1C.toInt(), count = 64, speed = 280f * density)
                     spawnPopup("BOOM! +${ev.pointsAwarded}", sx, sy, 0xFFFF9F1C.toInt())
                 }
+                is WorldEvent.LaserFired -> {
+                    soundEngine.playLaser()
+                    val sy = gridToScreenY(ev.centerY)
+                    val beam = laserBeams.firstOrNull { !it.active } ?: laserBeams[0]
+                    beam.y = sy
+                    beam.life = 0.34f
+                    beam.active = true
+                    for (step in 1..5) {
+                        val bx = boardRect.left + boardRect.width() * (step / 6f)
+                        spawnBurst(bx, sy, 0xFF00F5D4.toInt(), count = 14, speed = 230f * density)
+                    }
+                    spawnPopup("⚡ LAZER! +${ev.pointsAwarded}", boardRect.centerX(), sy, 0xFF00F5D4.toInt())
+                }
                 is WorldEvent.ColorCleaned -> {
                     soundEngine.playMagic()
                     val cx = boardRect.centerX()
@@ -288,6 +310,13 @@ class SandStageView(
                     spawnShockwave(cx, cy, boardRect.width() * 0.55f, ev.colorArgb)
                     spawnBurst(cx, cy, ev.colorArgb, count = 60, speed = 250f * density)
                     spawnPopup("RENK SİLİNDİ! +${ev.pointsAwarded}", cx, cy, ev.colorArgb)
+                }
+                is WorldEvent.SandStormCleared -> {
+                    soundEngine.playMagic()
+                    val sy = gridToScreenY(ev.topY)
+                    spawnShockwave(boardRect.centerX(), sy, boardRect.width() * 0.6f, 0xFFFFD166.toInt())
+                    spawnBurst(boardRect.centerX(), sy, 0xFFFFD166.toInt(), count = 70, speed = 260f * density)
+                    spawnPopup("🌪️ KUM FIRTINASI! +${ev.pointsAwarded}", boardRect.centerX(), sy, 0xFFFFD166.toInt())
                 }
                 is WorldEvent.LevelWon -> {
                     wonStars = ev.stars
@@ -621,10 +650,15 @@ class SandStageView(
                             world.detonateBomb(gx, gy)
                             true
                         }
+                        BoosterType.ROW_LASER -> {
+                            world.fireHorizontalLaser(gy)
+                            true
+                        }
                         BoosterType.COLOR_CLEANER -> {
                             world.clearAllSandOfColorAt(gx, gy)
                         }
-                        BoosterType.RAINBOW_UPGRADE -> false
+                        BoosterType.RAINBOW_UPGRADE,
+                        BoosterType.REROLL_TRAY -> false
                     }
                     if (success) {
                         activeTargetBooster = null
@@ -790,9 +824,26 @@ class SandStageView(
             ring.life -= dt
             if (ring.life <= 0f) ring.active = false
         }
+
+        for (beam in laserBeams) {
+            if (!beam.active) continue
+            beam.life -= dt
+            if (beam.life <= 0f) beam.active = false
+        }
     }
 
     private fun drawEffects(canvas: Canvas) {
+        for (beam in laserBeams) {
+            if (!beam.active) continue
+            val ratio = (beam.life / 0.34f).coerceIn(0f, 1f)
+            val outerHalf = 14f * density * ratio
+            val innerHalf = 4.5f * density * ratio
+            fillPaint.color = ColorMath.withAlpha(0xFF00F5D4.toInt(), (ratio * 150f).toInt())
+            canvas.drawRect(boardRect.left, beam.y - outerHalf, boardRect.right, beam.y + outerHalf, fillPaint)
+            fillPaint.color = ColorMath.withAlpha(0xFFFFFFFF.toInt(), (ratio * 245f).toInt())
+            canvas.drawRect(boardRect.left, beam.y - innerHalf, boardRect.right, beam.y + innerHalf, fillPaint)
+        }
+
         for (ring in shockwaves) {
             if (!ring.active) continue
             val progress = 1f - (ring.life / 0.38f).coerceIn(0f, 1f)

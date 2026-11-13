@@ -4,7 +4,7 @@
 
 ## 📥 İndir (Android APK)
 
-- **[📲 SandBlock v1.0.0 APK İndir (Doğrudan İndirme — 6.3 MB)](https://github.com/HNMLabs/sandblock/raw/main/releases/SandBlock-v1.0.0.apk)** *(Android 8.0 / API 26+)*
+- **[📲 SandBlock APK İndir (Doğrudan İndirme — v1.1.0)](https://github.com/HNMLabs/sandblock/raw/main/releases/SandBlock-v1.1.0.apk)** *(Android 8.0 / API 26+)*
 
 ## ✨ Özellikler
 
@@ -12,16 +12,21 @@
 - **Sürükle-Bırak & Dokun-Döndür Kontrolleri:**
   - Ekranın altındaki 3'lü tepsideki bloklara **dokunarak 90° döndürebilir**, parmağınızla **oyun alanına sürükleyip** bırakabilirsiniz.
   - Parmak altı kaydırma ofseti ve canlı hayalet önizleme (ghost preview) ile tek elle rahat oynanış.
-- **Soldan Sağa Köprü & Zincirleme Kombo Sistemi:**
-  - Aynı renkteki kum taneleri **sol duvardan sağ duvara** kesintisiz bir şerit oluşturduğunda parlayarak temizlenir.
-  - Üstte kalan kumların çökmesiyle oluşan ardışık temizlemeler **Kombo Çarpanı (`x2`, `x3`, ...)** kazandırır.
+- **Soldan Sağa Köprü, Kombo & Canlı Altın Kazanımı:**
+  - Aynı renkteki kum taneleri **sol duvardan sağ duvara** kesintisiz bir şerit oluşturduğunda parlayarak temizlenir ve **oyun oynarken anında `🪙` altın** kazandırır!
+  - Üstte kalan kumların çökmesiyle oluşan ardışık temizlemeler **Kombo Çarpanı (`x2`, `x3`, ...)** ve ekstra altın kazandırır.
 - **2 Oyun Modu:**
   1. **Klasik Sonsuz Mod:** Skor arttıkça 3 renkten 5 renge çıkan dinamik zorluk ve yüksek skor yarışı.
   2. **Macera Modu (12 El Yapımı Bölüm):** 4 farklı dünyada özel taş engeller, kum hunileri, hamle sınırları, **Çatlak Kumtaşı (`🪨`)** hedefleri ve **3 Yıldız** derecelendirme sistemi.
-- **Özel Bloklar & Aktif Güçlendiriciler:**
+- **🛒 Oyun İçi Altın Mağazası & 6 Güçlendirici:**
+  - Oyun devam ederken sağ üstteki **`🛒 🪙` Mağaza** butonuna dokunarak kazandığınız altınlarla anında alışveriş yapabilirsiniz:
   - **💣 TNT Bomba:** Geniş bir krater açarak kumları ve taş engelleri patlatır.
+  - **⚡ Yatay Lazer:** Seçilen satırı boydan boya lazerle keserek üstteki kumları çökertir.
   - **🎨 Renk Silici:** Seçilen renkteki tüm kum tanelerini tek dokunuşla temizler.
-  - **🌈 Gökkuşağı Joker Kum:** Her renkle eşleşebilen özel joker kum taneleri oluşturur.
+  - **🌈 Gökkuşağı Joker Kum:** Tepsideki bir bloğu her renkle eşleşebilen joker kuma dönüştürür.
+  - **🔄 Tepsi Yenile:** Alttaki 3 bloğu anında yeni şekil ve renklerle değiştirir.
+  - **🌪️ Kum Fırtınası (Acil Kurtarma):** Mağazadan alındığı anda en üstteki tehlikeli kum yığınını süpürür.
+  - **📦 Avantaj Paketleri & 👑 Altın Bereketi:** İndirimli 3'lü TNT / Süper Kombo paketleri ve kalıcı altın çarpanı yükseltmesi (`+%25` → `+%100`).
 - **4 Görsel Tema:**
   - 🏜️ **Sahra Çölü** • 🌃 **Neon Gece** • 🌊 **Derin Okyanus** • 🍬 **Pastel Rüya**
 - **Prosedürel ASMR Ses & Haptik Titreşim Motoru:**

@@ -38,6 +38,8 @@ class AsmrSoundEngine(context: Context) {
     private val tapBuffer: ShortArray by lazy { synthWoodTap() }
     private val sandPourBuffer: ShortArray by lazy { synthSandPour() }
     private val bombBuffer: ShortArray by lazy { synthBombExplosion() }
+    private val laserBuffer: ShortArray by lazy { synthLaserBeam() }
+    private val coinBuffer: ShortArray by lazy { synthCoinClink() }
     private val magicBuffer: ShortArray by lazy { synthMagicSweep() }
     private val winBuffer: ShortArray by lazy { synthVictoryFanfare() }
     private val loseBuffer: ShortArray by lazy { synthGameOver() }
@@ -48,6 +50,27 @@ class AsmrSoundEngine(context: Context) {
     fun playTap() {
         vibrateTick(10L, 60)
         playPcm(tapBuffer, 0.55f)
+    }
+
+    fun playCoinPurchase() {
+        vibrateTick(18L, 120)
+        playPcm(coinBuffer, 0.85f)
+    }
+
+    fun playLaser() {
+        playPcm(laserBuffer, 0.88f)
+        if (hapticsEnabled) {
+            try {
+                vibrator?.vibrate(
+                    VibrationEffect.createWaveform(
+                        longArrayOf(0L, 20L, 18L, 45L),
+                        intArrayOf(0, 200, 0, 240),
+                        -1
+                    )
+                )
+            } catch (_: Exception) {
+            }
+        }
     }
 
     fun playSandDrop(isRainbow: Boolean = false) {
@@ -292,6 +315,38 @@ class AsmrSoundEngine(context: Context) {
                 }
             }
             out[i] = (sum * 18000.0).toInt().coerceIn(-32767, 32767).toShort()
+        }
+        return out
+    }
+
+    private fun synthCoinClink(): ShortArray {
+        // Two-tone metallic gold clink (B5 -> E6)
+        val n = (sampleRate * 0.24).toInt()
+        val out = ShortArray(n)
+        for (i in 0 until n) {
+            val t = i.toDouble() / sampleRate
+            val tone1 = sin(2.0 * PI * 987.77 * t) * exp(-t * 22.0) * 0.55
+            val tone2 = if (t >= 0.055) {
+                val dt = t - 0.055
+                (sin(2.0 * PI * 1318.51 * dt) * 0.65 + sin(2.0 * PI * 2637.02 * dt) * 0.25) * exp(-dt * 14.0)
+            } else {
+                0.0
+            }
+            out[i] = ((tone1 + tone2) * 19500.0).toInt().coerceIn(-32767, 32767).toShort()
+        }
+        return out
+    }
+
+    private fun synthLaserBeam(): ShortArray {
+        val n = (sampleRate * 0.28).toInt()
+        val out = ShortArray(n)
+        for (i in 0 until n) {
+            val t = i.toDouble() / sampleRate
+            val env = exp(-t * 9.5)
+            val sweepFreq = 1450.0 * exp(-t * 5.2) + 220.0
+            val wave = sin(2.0 * PI * sweepFreq * t) * 0.65 +
+                sin(2.0 * PI * sweepFreq * 1.5 * t) * 0.30
+            out[i] = (wave * env * 20000.0).toInt().coerceIn(-32767, 32767).toShort()
         }
         return out
     }

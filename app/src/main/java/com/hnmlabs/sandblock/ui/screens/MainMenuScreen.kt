@@ -50,11 +50,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.hnmlabs.sandblock.audio.AsmrSoundEngine
+import com.hnmlabs.sandblock.data.GamePreferences
 import com.hnmlabs.sandblock.model.GameTheme
+import com.hnmlabs.sandblock.ui.components.ShopDialog
 
 @Composable
 fun MainMenuScreen(
     theme: GameTheme,
+    prefs: GamePreferences,
+    soundEngine: AsmrSoundEngine,
     highScore: Int,
     coins: Int,
     totalStars: Int,
@@ -64,11 +69,13 @@ fun MainMenuScreen(
     onToggleSound: () -> Unit,
     onToggleHaptics: () -> Unit,
     onSelectTheme: (GameTheme) -> Unit,
+    onCoinsChanged: () -> Unit,
     onStartClassic: () -> Unit,
     onOpenAdventure: () -> Unit
 ) {
     var showThemeDialog by remember { mutableStateOf(false) }
     var showHowToPlay by remember { mutableStateOf(false) }
+    var showShopDialog by remember { mutableStateOf(false) }
 
     val infinite = rememberInfiniteTransition(label = "ambient_sand")
     val fallProgress by infinite.animateFloat(
@@ -125,7 +132,15 @@ fun MainMenuScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatPill(text = "🪙 $coins", bgColor = cardColor, borderColor = accent.copy(alpha = 0.45f))
+                    StatPill(
+                        text = "🛒 🪙 $coins +",
+                        bgColor = cardColor,
+                        borderColor = Color(0xFFFFD166).copy(alpha = 0.7f),
+                        onClick = {
+                            soundEngine.playTap()
+                            showShopDialog = true
+                        }
+                    )
                     StatPill(text = "⭐ $totalStars/36", bgColor = cardColor, borderColor = accent.copy(alpha = 0.45f))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -282,6 +297,28 @@ fun MainMenuScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Gold Shop Button
+            OutlinedButton(
+                onClick = {
+                    soundEngine.playTap()
+                    showShopDialog = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.5.dp, Color(0xFFFFD166).copy(alpha = 0.75f))
+            ) {
+                Text(
+                    text = "🛒  ALTIN MAĞAZASI (BOMBA, LAZER & PAKETLER)",
+                    color = Color(0xFFFFD166),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 13.5.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Bottom Row: Themes & How To Play
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -328,6 +365,17 @@ fun MainMenuScreen(
         }
     }
 
+    if (showShopDialog) {
+        ShopDialog(
+            theme = theme,
+            prefs = prefs,
+            soundEngine = soundEngine,
+            inActiveGame = false,
+            onPurchaseChanged = onCoinsChanged,
+            onDismiss = { showShopDialog = false }
+        )
+    }
+
     if (showThemeDialog) {
         ThemeSelectorDialog(
             currentTheme = theme,
@@ -348,8 +396,20 @@ fun MainMenuScreen(
 }
 
 @Composable
-private fun StatPill(text: String, bgColor: Color, borderColor: Color) {
+private fun StatPill(
+    text: String,
+    bgColor: Color,
+    borderColor: Color,
+    onClick: (() -> Unit)? = null
+) {
     Surface(
+        modifier = if (onClick != null) {
+            Modifier
+                .clip(RoundedCornerShape(50))
+                .clickable(onClick = onClick)
+        } else {
+            Modifier
+        },
         color = bgColor.copy(alpha = 0.9f),
         shape = RoundedCornerShape(50),
         border = BorderStroke(1.dp, borderColor)

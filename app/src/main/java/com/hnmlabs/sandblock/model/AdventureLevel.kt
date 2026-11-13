@@ -2,31 +2,57 @@ package com.hnmlabs.sandblock.model
 
 enum class BoosterType(
     val id: String,
+    val shortTitleTr: String,
     val titleTr: String,
+    val descTr: String,
     val hintTr: String,
     val emoji: String,
     val coinCost: Int
 ) {
     BOMB(
         id = "bomb",
+        shortTitleTr = "TNT",
         titleTr = "TNT Bomba",
-        hintTr = "Patlatmak istediğin alana dokun!",
+        descTr = "Dokunduğun noktada dev bir krater patlatır ve taşları kırar.",
+        hintTr = "💣 Patlatmak istediğin alana dokun!",
         emoji = "💣",
-        coinCost = 50
+        coinCost = 45
+    ),
+    ROW_LASER(
+        id = "row_laser",
+        shortTitleTr = "Lazer",
+        titleTr = "Yatay Lazer",
+        descTr = "Seçtiğin satırı boydan boya lazerle kesip üstteki kumları çökertir.",
+        hintTr = "⚡ Lazerle kesmek istediğin satıra dokun!",
+        emoji = "⚡",
+        coinCost = 55
     ),
     COLOR_CLEANER(
         id = "color_cleaner",
+        shortTitleTr = "Renk",
         titleTr = "Renk Silici",
-        hintTr = "Tümünü silmek istediğin kum rengine dokun!",
+        descTr = "Dokunduğun renkteki tüm kum tanelerini haritadan siler.",
+        hintTr = "🎨 Tümünü silmek istediğin kum rengine dokun!",
         emoji = "🎨",
-        coinCost = 70
+        coinCost = 65
     ),
     RAINBOW_UPGRADE(
         id = "rainbow",
+        shortTitleTr = "Joker",
         titleTr = "Joker Kum",
-        hintTr = "Tepsideki bir bloğu gökkuşağına dönüştürür",
+        descTr = "Tepsideki bir bloğu her renkle birleşen Gökkuşağı kumuna çevirir.",
+        hintTr = "🌈 Tepsideki bloğu gökkuşağına dönüştürür",
         emoji = "🌈",
-        coinCost = 45
+        coinCost = 40
+    ),
+    REROLL_TRAY(
+        id = "reroll_tray",
+        shortTitleTr = "Yenile",
+        titleTr = "Tepsi Yenile",
+        descTr = "Alttaki 3 bloğu anında yeni şekil ve renklerle değiştirir.",
+        hintTr = "🔄 Tepsideki 3 bloğu yeniler",
+        emoji = "🔄",
+        coinCost = 30
     )
 }
 
