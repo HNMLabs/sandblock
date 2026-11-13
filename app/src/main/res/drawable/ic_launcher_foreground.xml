@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Top falling block (T-piece) -->
+    <path
+        android:fillColor="#00B4D8"
+        android:pathData="M42,24h8v8h-8zM50,24h8v8h-8zM58,24h8v8h-8zM50,32h8v8h-8z" />
+    <!-- Falling sand grains -->
+    <path
+        android:fillColor="#90E0EF"
+        android:pathData="M46,35h3v3h-3zM53,43h3v3h-3zM60,37h3v3h-3zM49,49h3v3h-3zM56,51h3v3h-3z" />
+    <!-- Bottom colorful sand dunes -->
+    <path
+        android:fillColor="#FB5607"
+        android:pathData="M24,78 L42,60 L60,78 Z" />
+    <path
+        android:fillColor="#FFB703"
+        android:pathData="M44,78 L62,56 L84,78 Z" />
+    <path
+        android:fillColor="#52B788"
+        android:pathData="M24,76 L84,76 L84,84 L24,84 Z" />
+</vector>
