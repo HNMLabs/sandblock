@@ -2,6 +2,10 @@
 
 **SandBlock**, klasik sürükle-bırak blok bulmacasını gerçek zamanlı **Hücresel Otomat (Cellular Automata) Kum Fiziği**, **ASMR ses sentezi** ve **stratejik güçlendiricilerle** birleştiren yerel (Native) bir Android oyunudur.
 
+## 📥 İndir (Android APK)
+
+- **[📲 SandBlock v1.0.0 APK İndir (Doğrudan İndirme — 6.3 MB)](https://github.com/HNMLabs/sandblock/raw/main/releases/SandBlock-v1.0.0.apk)** *(Android 8.0 / API 26+)*
+
 ## ✨ Özellikler
 
 - **Gerçekçi Kum Fiziği (60 FPS):** Oyun alanına bırakılan her blok yüzlerce kum tanesine dağılır, yerçekimiyle boşluklara akar ve 45° doğal kum tepeleri oluşturur.
