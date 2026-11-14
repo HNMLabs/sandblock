@@ -42,3 +42,13 @@ render.experimental.xml
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Xcode / iOS local user state
+xcuserdata/
+DerivedData/
+*.xcodeproj/project.xcworkspace/
+*.xcworkspace/xcuserdata/
+*.moved-aside
+*.ipa
+*.dSYM.zip
+*.dSYM

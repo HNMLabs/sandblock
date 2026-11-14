@@ -1,10 +1,11 @@
-# 🏜️ SandBlock v2.0 — Android Kum Fiziği Blok Bulmacası
+# 🏜️ SandBlock v2.0 — Android & iOS Kum Fiziği Blok Bulmacası
 
-**SandBlock**, klasik sürükle-bırak ve düşen blok bulmacalarını gerçek zamanlı **60 FPS Hücresel Otomat (Cellular Automata) Kum Fiziği**, **ASMR ses & Zen müzik sentezi**, **Lav & Buz mekanikleri** ve **zengin ilerleme sistemiyle** birleştiren yerel (Native) bir Android oyunudur.
+**SandBlock**, klasik sürükle-bırak ve düşen blok bulmacalarını gerçek zamanlı **60 FPS Hücresel Otomat (Cellular Automata) Kum Fiziği**, **ASMR ses & Zen müzik sentezi**, **Lav & Buz mekanikleri** ve **zengin ilerleme sistemiyle** birleştiren yerel (Native) bir **Android (Kotlin/Compose)** ve **iOS (Swift/SwiftUI/Xcode)** oyunudur.
 
-## 📥 İndir (Android APK)
+## 📥 İndir & Platformlar
 
-- **[📲 SandBlock APK İndir (Doğrudan İndirme — v2.0.0)](https://github.com/HNMLabs/sandblock/raw/main/releases/SandBlock-v2.0.0.apk)** *(Android 8.0 / API 26+)*
+- **[📲 Android APK İndir (Doğrudan İndirme — v2.0.0)](https://github.com/HNMLabs/sandblock/raw/main/releases/SandBlock-v2.0.0.apk)** *(Android 8.0 / API 26+)*
+- **[🍎 iOS / Xcode Projesi (`sandblockxcode/`)](sandblockxcode/README.md)** *(iOS 16.0+ • %100 Native Swift + SwiftUI + CoreGraphics + AVAudioEngine)*
 
 ## ✨ v2.0 Yenilikleri ve Özellikler
 

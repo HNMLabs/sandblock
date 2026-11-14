@@ -1,0 +1,572 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1A9F3226F8F6E93CFAA66BBA /* SandBlockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 408861E4920D34BABF0CD367 /* SandBlockApp.swift */; };
+		AE2F165E26E3989A539F9841 /* GameTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC36784323F1B452606DFFB /* GameTheme.swift */; };
+		AB8F474127FB58550165E7A5 /* BlockShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = BABBCACA7D5C9F332B9E1A62 /* BlockShape.swift */; };
+		AD5422049F0C74FDB53B0737 /* ProgressionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7AD545D9407B7763C7C3A8 /* ProgressionModels.swift */; };
+		AAA6AF7E366FD0F0A0A84F41 /* AdventureLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBE9BFDBEFBC51F3C7C3720 /* AdventureLevel.swift */; };
+		0CFAE2DE30CA3882F4B67AF4 /* SandWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D6EC47F2EE725C3B7AFDB6 /* SandWorld.swift */; };
+		6B016E30784B5505F27E3EC5 /* GamePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787999D9038A49BC152EFE27 /* GamePreferences.swift */; };
+		E648868798CEEB0234D459EF /* AsmrSoundEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF0E21DC92BCB286EC7EEFF /* AsmrSoundEngine.swift */; };
+		0F65C918B48A25BDF8C65218 /* SandStageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9817522E392A3E4D22C09746 /* SandStageView.swift */; };
+		4A8E30F6C6E41A01082E948C /* ShopSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA0EDF1E657CB7D0B3F6BC95 /* ShopSheetView.swift */; };
+		CA410FEC2E40F7FF66E0A29C /* QuestsAchievementsSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 073087373FDCC85450EC4357 /* QuestsAchievementsSheetView.swift */; };
+		4AA5CE9C6FF413CD70D3B3E3 /* MainMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E7EA560A2DB7E0A50F48AD7 /* MainMenuView.swift */; };
+		68E08B7D1AC3038D2BFEFBA8 /* AdventureMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 107630DF767AEA12EBE024DD /* AdventureMapView.swift */; };
+		0CF89DDF30DB2DE1B1F84F44 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC36B38573B18B9ED39586A2 /* GameView.swift */; };
+		61A49B419284C4490E29A1BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8CE381F4A60C38F9C479E1DC /* Assets.xcassets */; };
+		0583EDD67194B85A806D0F03 /* SandWorldTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C8A3D06C999A0E8FAC01BDA /* SandWorldTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6576BE3FCBBB716FA05A9245 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 18F0996C3D440D7FE937268D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DFD008058D820C0FB7B9BC86;
+			remoteInfo = SandBlock;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		14EE3150E1A8E413E0D39323 /* SandBlock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SandBlock.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CAB8F6ED04176749F0DBB93F /* SandBlockTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SandBlockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		408861E4920D34BABF0CD367 /* SandBlockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandBlockApp.swift; sourceTree = "<group>"; };
+		1CC36784323F1B452606DFFB /* GameTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameTheme.swift; sourceTree = "<group>"; };
+		BABBCACA7D5C9F332B9E1A62 /* BlockShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockShape.swift; sourceTree = "<group>"; };
+		9A7AD545D9407B7763C7C3A8 /* ProgressionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressionModels.swift; sourceTree = "<group>"; };
+		5EBE9BFDBEFBC51F3C7C3720 /* AdventureLevel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdventureLevel.swift; sourceTree = "<group>"; };
+		74D6EC47F2EE725C3B7AFDB6 /* SandWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandWorld.swift; sourceTree = "<group>"; };
+		787999D9038A49BC152EFE27 /* GamePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePreferences.swift; sourceTree = "<group>"; };
+		4EF0E21DC92BCB286EC7EEFF /* AsmrSoundEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsmrSoundEngine.swift; sourceTree = "<group>"; };
+		9817522E392A3E4D22C09746 /* SandStageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandStageView.swift; sourceTree = "<group>"; };
+		CA0EDF1E657CB7D0B3F6BC95 /* ShopSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopSheetView.swift; sourceTree = "<group>"; };
+		073087373FDCC85450EC4357 /* QuestsAchievementsSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestsAchievementsSheetView.swift; sourceTree = "<group>"; };
+		5E7EA560A2DB7E0A50F48AD7 /* MainMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuView.swift; sourceTree = "<group>"; };
+		107630DF767AEA12EBE024DD /* AdventureMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdventureMapView.swift; sourceTree = "<group>"; };
+		DC36B38573B18B9ED39586A2 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		9C8A3D06C999A0E8FAC01BDA /* SandWorldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandWorldTests.swift; sourceTree = "<group>"; };
+		8CE381F4A60C38F9C479E1DC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C27732BBCC2635334B34A00F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E13BD8823F5E3FEF4C7533E6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		EC1F5CC0703DDDB926056093 = {
+			isa = PBXGroup;
+			children = (
+				E20E5A68F1CA99E0A56F70F4 /* SandBlock */,
+				40243423246208443C2E9E1A /* SandBlockTests */,
+				9717EE5693DD116A804B3437 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9717EE5693DD116A804B3437 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				14EE3150E1A8E413E0D39323 /* SandBlock.app */,
+				CAB8F6ED04176749F0DBB93F /* SandBlockTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E20E5A68F1CA99E0A56F70F4 /* SandBlock */ = {
+			isa = PBXGroup;
+			children = (
+				408861E4920D34BABF0CD367 /* SandBlockApp.swift */,
+				40C2EB77493674526A88227F /* Model */,
+				B8E7D00B46AC9B4C15FCE313 /* Engine */,
+				EB66DAF29027F1E3E92C4F0A /* Data */,
+				CDB7C8CAE2162B12F0E50382 /* Audio */,
+				A7B518353DF854F784C1A7AF /* UI */,
+				8CE381F4A60C38F9C479E1DC /* Assets.xcassets */,
+			);
+			path = SandBlock;
+			sourceTree = "<group>";
+		};
+		40C2EB77493674526A88227F /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				1CC36784323F1B452606DFFB /* GameTheme.swift */,
+				BABBCACA7D5C9F332B9E1A62 /* BlockShape.swift */,
+				9A7AD545D9407B7763C7C3A8 /* ProgressionModels.swift */,
+				5EBE9BFDBEFBC51F3C7C3720 /* AdventureLevel.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		B8E7D00B46AC9B4C15FCE313 /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				74D6EC47F2EE725C3B7AFDB6 /* SandWorld.swift */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
+		EB66DAF29027F1E3E92C4F0A /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				787999D9038A49BC152EFE27 /* GamePreferences.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		CDB7C8CAE2162B12F0E50382 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				4EF0E21DC92BCB286EC7EEFF /* AsmrSoundEngine.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		A7B518353DF854F784C1A7AF /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				5651043B818BA04ABE0B0CB2 /* Stage */,
+				33E136681EC6AC60575E67CE /* Components */,
+				4C842600ED922EAFBFCC84C0 /* Screens */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		5651043B818BA04ABE0B0CB2 /* Stage */ = {
+			isa = PBXGroup;
+			children = (
+				9817522E392A3E4D22C09746 /* SandStageView.swift */,
+			);
+			path = Stage;
+			sourceTree = "<group>";
+		};
+		33E136681EC6AC60575E67CE /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				CA0EDF1E657CB7D0B3F6BC95 /* ShopSheetView.swift */,
+				073087373FDCC85450EC4357 /* QuestsAchievementsSheetView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		4C842600ED922EAFBFCC84C0 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				5E7EA560A2DB7E0A50F48AD7 /* MainMenuView.swift */,
+				107630DF767AEA12EBE024DD /* AdventureMapView.swift */,
+				DC36B38573B18B9ED39586A2 /* GameView.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		40243423246208443C2E9E1A /* SandBlockTests */ = {
+			isa = PBXGroup;
+			children = (
+				9C8A3D06C999A0E8FAC01BDA /* SandWorldTests.swift */,
+			);
+			path = SandBlockTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DFD008058D820C0FB7B9BC86 /* SandBlock */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6FFC96F854F6455D4BDE4BF2 /* Build configuration list for PBXNativeTarget "SandBlock" */;
+			buildPhases = (
+				0046EB0212193F8BFB3BD85E /* Sources */,
+				C27732BBCC2635334B34A00F /* Frameworks */,
+				19EF88392CDFBCD44DEBE304 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SandBlock;
+			productName = SandBlock;
+			productReference = 14EE3150E1A8E413E0D39323 /* SandBlock.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7A80E9B6F2F7CA0D90AEE48E /* SandBlockTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 525925DDF301EF84DD7BA2F6 /* Build configuration list for PBXNativeTarget "SandBlockTests" */;
+			buildPhases = (
+				134E2DF2455386DCD8156EDC /* Sources */,
+				E13BD8823F5E3FEF4C7533E6 /* Frameworks */,
+				095E7964A049CC3434FB6707 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E863D03B170C9B562EFCA3E2 /* PBXTargetDependency */,
+			);
+			name = SandBlockTests;
+			productName = SandBlockTests;
+			productReference = CAB8F6ED04176749F0DBB93F /* SandBlockTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		18F0996C3D440D7FE937268D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					DFD008058D820C0FB7B9BC86 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					7A80E9B6F2F7CA0D90AEE48E = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = DFD008058D820C0FB7B9BC86;
+					};
+				};
+			};
+			buildConfigurationList = EA66D1A884B200C9D5253B07 /* Build configuration list for PBXProject "SandBlock" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				tr,
+			);
+			mainGroup = EC1F5CC0703DDDB926056093;
+			productRefGroup = 9717EE5693DD116A804B3437 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DFD008058D820C0FB7B9BC86 /* SandBlock */,
+				7A80E9B6F2F7CA0D90AEE48E /* SandBlockTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		19EF88392CDFBCD44DEBE304 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				61A49B419284C4490E29A1BA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		095E7964A049CC3434FB6707 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0046EB0212193F8BFB3BD85E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A9F3226F8F6E93CFAA66BBA /* SandBlockApp.swift in Sources */,
+				AE2F165E26E3989A539F9841 /* GameTheme.swift in Sources */,
+				AB8F474127FB58550165E7A5 /* BlockShape.swift in Sources */,
+				AD5422049F0C74FDB53B0737 /* ProgressionModels.swift in Sources */,
+				AAA6AF7E366FD0F0A0A84F41 /* AdventureLevel.swift in Sources */,
+				0CFAE2DE30CA3882F4B67AF4 /* SandWorld.swift in Sources */,
+				6B016E30784B5505F27E3EC5 /* GamePreferences.swift in Sources */,
+				E648868798CEEB0234D459EF /* AsmrSoundEngine.swift in Sources */,
+				0F65C918B48A25BDF8C65218 /* SandStageView.swift in Sources */,
+				4A8E30F6C6E41A01082E948C /* ShopSheetView.swift in Sources */,
+				CA410FEC2E40F7FF66E0A29C /* QuestsAchievementsSheetView.swift in Sources */,
+				4AA5CE9C6FF413CD70D3B3E3 /* MainMenuView.swift in Sources */,
+				68E08B7D1AC3038D2BFEFBA8 /* AdventureMapView.swift in Sources */,
+				0CF89DDF30DB2DE1B1F84F44 /* GameView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		134E2DF2455386DCD8156EDC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0583EDD67194B85A806D0F03 /* SandWorldTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E863D03B170C9B562EFCA3E2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DFD008058D820C0FB7B9BC86 /* SandBlock */;
+			targetProxy = 6576BE3FCBBB716FA05A9245 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2A5A74C7EAF3F54C8C57C894 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		BEED693BCE08EC8898E2A960 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		FD5ADBF231E0BC707DC5D4D9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 248V473M84;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SandBlock;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hnmlabs.sandblock;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BA8CDF055D8B1E046C5B6196 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 248V473M84;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SandBlock;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hnmlabs.sandblock;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9740D98AA7481E467C837EF3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 248V473M84;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hnmlabs.sandblockTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SandBlock.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SandBlock";
+			};
+			name = Debug;
+		};
+		36873B5190714D14E1C0F503 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 248V473M84;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hnmlabs.sandblockTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SandBlock.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SandBlock";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		EA66D1A884B200C9D5253B07 /* Build configuration list for PBXProject "SandBlock" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2A5A74C7EAF3F54C8C57C894 /* Debug */,
+				BEED693BCE08EC8898E2A960 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6FFC96F854F6455D4BDE4BF2 /* Build configuration list for PBXNativeTarget "SandBlock" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FD5ADBF231E0BC707DC5D4D9 /* Debug */,
+				BA8CDF055D8B1E046C5B6196 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		525925DDF301EF84DD7BA2F6 /* Build configuration list for PBXNativeTarget "SandBlockTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9740D98AA7481E467C837EF3 /* Debug */,
+				36873B5190714D14E1C0F503 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 18F0996C3D440D7FE937268D /* Project object */;
+}
