@@ -16,6 +16,10 @@ data class BlockShape(
     }
 
     companion object {
+        fun byId(id: String): BlockShape =
+            if (id == BOMB_SHAPE.id) BOMB_SHAPE
+            else STANDARD_SHAPES.firstOrNull { it.id == id } ?: STANDARD_SHAPES.first()
+
         fun normalize(id: String, rawCells: List<CellOffset>): BlockShape {
             val minCol = rawCells.minOf { it.col }
             val minRow = rawCells.minOf { it.row }
@@ -64,7 +68,8 @@ data class BlockShape(
 enum class PieceKind {
     NORMAL,
     RAINBOW,
-    BOMB
+    BOMB,
+    LAVA
 }
 
 data class TrayPiece(
@@ -81,67 +86,87 @@ data class TrayPiece(
 
 class PieceGenerator(private val random: Random = Random.Default) {
     private var nextUid = 1L
-    private var traysGenerated = 0
+    private var piecesGenerated = 0
 
     fun reset() {
-        traysGenerated = 0
+        piecesGenerated = 0
+    }
+
+    fun nextSinglePiece(activeColors: Int, allowSpecialPieces: Boolean = true): TrayPiece {
+        piecesGenerated++
+        val safeColors = activeColors.coerceIn(2, 5)
+        val roll = random.nextFloat()
+
+        val kind = when {
+            allowSpecialPieces && piecesGenerated >= 5 && roll < 0.055f -> PieceKind.RAINBOW
+            allowSpecialPieces && piecesGenerated >= 7 && roll in 0.055f..0.095f -> PieceKind.BOMB
+            allowSpecialPieces && piecesGenerated >= 8 && roll in 0.095f..0.135f -> PieceKind.LAVA
+            else -> PieceKind.NORMAL
+        }
+
+        if (kind == PieceKind.BOMB) {
+            return TrayPiece(
+                uid = nextUid++,
+                shape = BlockShape.BOMB_SHAPE,
+                colorIndex = 0,
+                kind = PieceKind.BOMB
+            )
+        }
+
+        val shapePool = if (kind == PieceKind.LAVA) {
+            // Compact shapes for molten lava blocks
+            BlockShape.STANDARD_SHAPES.take(5)
+        } else {
+            BlockShape.STANDARD_SHAPES
+        }
+        var shape = shapePool[random.nextInt(shapePool.size)]
+        repeat(random.nextInt(4)) {
+            shape = shape.rotatedClockwise()
+        }
+
+        return TrayPiece(
+            uid = nextUid++,
+            shape = shape,
+            colorIndex = random.nextInt(safeColors),
+            kind = kind
+        )
     }
 
     fun nextTray(activeColors: Int, allowSpecialPieces: Boolean = true): List<TrayPiece> {
-        traysGenerated++
         val safeColors = activeColors.coerceIn(2, 5)
         val pieces = ArrayList<TrayPiece>(3)
-
-        // Ensure at least two pieces in a tray or consecutive trays give good color synergy
         val primaryColor = random.nextInt(safeColors)
 
         for (slot in 0 until 3) {
-            val roll = random.nextFloat()
-            val kind = when {
-                allowSpecialPieces && traysGenerated >= 2 && slot == 2 && roll < 0.11f -> PieceKind.RAINBOW
-                allowSpecialPieces && traysGenerated >= 3 && slot == 2 && roll in 0.11f..0.19f -> PieceKind.BOMB
-                else -> PieceKind.NORMAL
-            }
-
-            if (kind == PieceKind.BOMB) {
-                pieces.add(
-                    TrayPiece(
-                        uid = nextUid++,
-                        shape = BlockShape.BOMB_SHAPE,
-                        colorIndex = 0,
-                        kind = PieceKind.BOMB
-                    )
-                )
+            val base = nextSinglePiece(
+                activeColors = safeColors,
+                allowSpecialPieces = allowSpecialPieces && slot == 2
+            )
+            val piece = if (slot == 0 && base.kind == PieceKind.NORMAL && random.nextFloat() < 0.48f) {
+                base.copy(colorIndex = primaryColor)
             } else {
-                var shape = BlockShape.STANDARD_SHAPES[random.nextInt(BlockShape.STANDARD_SHAPES.size)]
-                val rotations = random.nextInt(4)
-                repeat(rotations) {
-                    shape = shape.rotatedClockwise()
-                }
-                val color = if (slot == 0 && random.nextFloat() < 0.45f) {
-                    primaryColor
-                } else {
-                    random.nextInt(safeColors)
-                }
-                pieces.add(
-                    TrayPiece(
-                        uid = nextUid++,
-                        shape = shape,
-                        colorIndex = color,
-                        kind = kind
-                    )
-                )
+                base
             }
+            pieces.add(piece)
         }
         return pieces
     }
 
     fun upgradePieceToRainbow(piece: TrayPiece): TrayPiece {
         val newShape = if (piece.kind == PieceKind.BOMB) {
-            BlockShape.STANDARD_SHAPES[1] // I3
+            BlockShape.STANDARD_SHAPES[1]
         } else {
             piece.shape
         }
         return piece.copy(shape = newShape, kind = PieceKind.RAINBOW)
+    }
+
+    fun upgradePieceToLava(piece: TrayPiece): TrayPiece {
+        val newShape = if (piece.kind == PieceKind.BOMB) {
+            BlockShape.STANDARD_SHAPES[0]
+        } else {
+            piece.shape
+        }
+        return piece.copy(shape = newShape, kind = PieceKind.LAVA)
     }
 }

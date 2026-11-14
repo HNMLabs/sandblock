@@ -40,29 +40,6 @@ enum class GameTheme(
         stoneBaseColor = 0xFF6C584C.toInt(),
         crackedStoneColor = 0xFFA98467.toInt()
     ),
-    NEON(
-        id = "neon",
-        titleTr = "Neon Gece",
-        subtitleTr = "Siberpunk parlak lazer akışları",
-        emoji = "🌃",
-        bgTop = 0xFF090717.toInt(),
-        bgBottom = 0xFF19123B.toInt(),
-        boardBg = 0xFF060510.toInt(),
-        boardGridLine = 0x1A00F5D4,
-        boardBorder = 0xFF00F5D4.toInt(),
-        surfaceCard = 0xFF161132.toInt(),
-        accentColor = 0xFF00F5D4.toInt(),
-        dangerLineColor = 0xFFFF2A85.toInt(),
-        sandPalette = intArrayOf(
-            0xFFFF2A85.toInt(), // Lazer Macenta
-            0xFF00F5D4.toInt(), // Elektrik Camgöbeği
-            0xFFFEE440.toInt(), // Siber Sarı
-            0xFF72EFDD.toInt(), // Buzul Neon (ya da Asit Yeşili: aşağıda net ayrım için parlak yeşil)
-            0xFF9B5DE5.toInt()  // Ultra Mor
-        ).also { it[3] = 0xFF57CC99.toInt() }, // Parlak Neon Yeşil
-        stoneBaseColor = 0xFF3C3758.toInt(),
-        crackedStoneColor = 0xFF6C639B.toInt()
-    ),
     OCEAN(
         id = "ocean",
         titleTr = "Derin Okyanus",
@@ -86,6 +63,29 @@ enum class GameTheme(
         stoneBaseColor = 0xFF3D5A6C.toInt(),
         crackedStoneColor = 0xFF779CAB.toInt()
     ),
+    NEON(
+        id = "neon",
+        titleTr = "Neon Gece",
+        subtitleTr = "Siberpunk parlak lazer akışları",
+        emoji = "🌃",
+        bgTop = 0xFF090717.toInt(),
+        bgBottom = 0xFF19123B.toInt(),
+        boardBg = 0xFF060510.toInt(),
+        boardGridLine = 0x1A00F5D4,
+        boardBorder = 0xFF00F5D4.toInt(),
+        surfaceCard = 0xFF161132.toInt(),
+        accentColor = 0xFF00F5D4.toInt(),
+        dangerLineColor = 0xFFFF2A85.toInt(),
+        sandPalette = intArrayOf(
+            0xFFFF2A85.toInt(), // Lazer Macenta
+            0xFF00F5D4.toInt(), // Elektrik Camgöbeği
+            0xFFFEE440.toInt(), // Siber Sarı
+            0xFF57CC99.toInt(), // Parlak Neon Yeşil
+            0xFF9B5DE5.toInt()  // Ultra Mor
+        ),
+        stoneBaseColor = 0xFF3C3758.toInt(),
+        crackedStoneColor = 0xFF6C639B.toInt()
+    ),
     PASTEL(
         id = "pastel",
         titleTr = "Pastel Rüya",
@@ -104,10 +104,56 @@ enum class GameTheme(
             0xFFFFEA85.toInt(), // Limon Krema
             0xFF80ED99.toInt(), // Nane Yeşili
             0xFF72DDF7.toInt(), // Bebek Mavisi
-            0xFFD8BBFF.toInt()  // Lavanta Lazeri
+            0xFFD8BBFF.toInt()  // Lavanta
         ),
         stoneBaseColor = 0xFF5E546E.toInt(),
         crackedStoneColor = 0xFF9D8CA7.toInt()
+    ),
+    VOLCANO(
+        id = "volcano",
+        titleTr = "Volkanik Magma",
+        subtitleTr = "Obsidyen kayalar ve kor ateş yansımaları",
+        emoji = "🌋",
+        bgTop = 0xFF1A0808.toInt(),
+        bgBottom = 0xFF33110C.toInt(),
+        boardBg = 0xFF110505.toInt(),
+        boardGridLine = 0x1AFF6D00,
+        boardBorder = 0xFFFF6D00.toInt(),
+        surfaceCard = 0xFF290E0B.toInt(),
+        accentColor = 0xFFFF9E00.toInt(),
+        dangerLineColor = 0xFFFF2A2A.toInt(),
+        sandPalette = intArrayOf(
+            0xFFFF5400.toInt(), // Magma Turuncusu
+            0xFFFFBD00.toInt(), // Kor Sarısı
+            0xFF00BBF9.toInt(), // Gayzer Mavisi
+            0xFF38B000.toInt(), // Zümrüt Kristal
+            0xFFC77DFF.toInt()  // Obsidyen Moru
+        ),
+        stoneBaseColor = 0xFF4A3535.toInt(),
+        crackedStoneColor = 0xFF8C5346.toInt()
+    ),
+    AURORA(
+        id = "aurora",
+        titleTr = "Kuzey Işıkları",
+        subtitleTr = "Kutup buzulları ve kutup ışığı parıltıları",
+        emoji = "🌌",
+        bgTop = 0xFF07131E.toInt(),
+        bgBottom = 0xFF102A3A.toInt(),
+        boardBg = 0xFF050E17.toInt(),
+        boardGridLine = 0x1A64DFDF,
+        boardBorder = 0xFF64DFDF.toInt(),
+        surfaceCard = 0xFF0D2230.toInt(),
+        accentColor = 0xFF72EFDD.toInt(),
+        dangerLineColor = 0xFFFF5D8F.toInt(),
+        sandPalette = intArrayOf(
+            0xFF72EFDD.toInt(), // Aurora Turkuazı
+            0xFFFF758F.toInt(), // Kutup Gülü
+            0xFFFFE66D.toInt(), // Kutup Yıldızı
+            0xFF4EA8DE.toInt(), // Buzul Mavisi
+            0xFFB892FF.toInt()  // Kuzey Moru
+        ),
+        stoneBaseColor = 0xFF3D5A73.toInt(),
+        crackedStoneColor = 0xFF7699B5.toInt()
     );
 
     companion object {
@@ -126,11 +172,19 @@ object ColorMath {
         0xFFF72585.toInt()
     )
 
+    private val lavaLut = intArrayOf(
+        0xFFFF2A00.toInt(),
+        0xFFFF6D00.toInt(),
+        0xFFFFB703.toInt(),
+        0xFFFFF3B0.toInt(),
+        0xFFFF5400.toInt()
+    )
+
     fun shade(argb: Int, delta: Int): Int {
         val a = (argb ushr 24) and 0xFF
         val r = (((argb ushr 16) and 0xFF) + delta).coerceIn(0, 255)
         val g = (((argb ushr 8) and 0xFF) + delta).coerceIn(0, 255)
-        val b = ((argb and 0xFF) + delta).coerceIn(0, 255)
+        val b = ((argb and 0xFF) * 1 + delta).coerceIn(0, 255)
         return (a shl 24) or (r shl 16) or (g shl 8) or b
     }
 
@@ -154,5 +208,13 @@ object ColorMath {
         val next = (idx + 1) % rainbowLut.size
         val frac = (pos % 16) / 16f
         return blend(rainbowLut[idx], rainbowLut[next], frac)
+    }
+
+    fun lavaColor(seed: Int, tick: Int): Int {
+        val pos = ((seed * 13 + tick * 3) and 0x7FFFFFFF) % (lavaLut.size * 16)
+        val idx = pos / 16
+        val next = (idx + 1) % lavaLut.size
+        val frac = (pos % 16) / 16f
+        return blend(lavaLut[idx], lavaLut[next], frac)
     }
 }

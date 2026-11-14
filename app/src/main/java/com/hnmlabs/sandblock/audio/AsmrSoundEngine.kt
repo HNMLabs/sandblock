@@ -10,14 +10,15 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import java.util.concurrent.Executors
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * Procedural ASMR sound synthesizer & haptic feedback controller.
+ * Procedural ASMR sound synthesizer, ambient Zen music generator & haptic controller.
  * Generates organic granular sand pouring, soft wooden taps, crystal harmonic combo chimes,
- * and TNT explosion effects using lightweight PCM buffers with zero external binary dependencies.
+ * volcanic lava sizzles, Fever fanfare, and relaxing pentatonic Zen background pads.
  */
 class AsmrSoundEngine(context: Context) {
 
@@ -35,16 +36,163 @@ class AsmrSoundEngine(context: Context) {
     var soundEnabled: Boolean = true
     var hapticsEnabled: Boolean = true
 
+    @Volatile
+    var musicEnabled: Boolean = true
+        private set
+
+    @Volatile
+    private var appInForeground: Boolean = false
+
+    @Volatile
+    private var released: Boolean = false
+
+    private var musicThread: Thread? = null
+    private val musicLock = Any()
+
     private val tapBuffer: ShortArray by lazy { synthWoodTap() }
     private val sandPourBuffer: ShortArray by lazy { synthSandPour() }
+    private val lavaBuffer: ShortArray by lazy { synthLavaSizzle() }
     private val bombBuffer: ShortArray by lazy { synthBombExplosion() }
     private val laserBuffer: ShortArray by lazy { synthLaserBeam() }
     private val coinBuffer: ShortArray by lazy { synthCoinClink() }
     private val magicBuffer: ShortArray by lazy { synthMagicSweep() }
+    private val feverBuffer: ShortArray by lazy { synthFeverIgnite() }
     private val winBuffer: ShortArray by lazy { synthVictoryFanfare() }
     private val loseBuffer: ShortArray by lazy { synthGameOver() }
     private val clearBuffers: Array<ShortArray> by lazy {
         Array(6) { comboIdx -> synthCrystalClear(comboIdx) }
+    }
+
+    fun updateMusicPreference(enabled: Boolean) {
+        musicEnabled = enabled
+        syncMusicLoop()
+    }
+
+    fun onAppResumed() {
+        appInForeground = true
+        syncMusicLoop()
+    }
+
+    fun onAppPaused() {
+        appInForeground = false
+        syncMusicLoop()
+    }
+
+    private fun syncMusicLoop() {
+        synchronized(musicLock) {
+            val shouldRun = musicEnabled && appInForeground && !released
+            if (shouldRun && (musicThread == null || musicThread?.isAlive != true)) {
+                val t = Thread({ streamZenMusicLoop() }, "SandBlock-ZenMusic").apply {
+                    isDaemon = true
+                    priority = Thread.MIN_PRIORITY + 2
+                }
+                musicThread = t
+                t.start()
+            }
+        }
+    }
+
+    private fun streamZenMusicLoop() {
+        val musicRate = 16000
+        val chunkSamples = 3200 // 200ms per write
+        val buffer = ShortArray(chunkSamples)
+        var track: AudioTrack? = null
+
+        // Peaceful Zen chord voicings (Hz): Cmaj9 -> Am9 -> Fmaj7 -> G6
+        val chords = arrayOf(
+            doubleArrayOf(130.81, 196.00, 246.94, 293.66),
+            doubleArrayOf(110.00, 164.81, 220.00, 261.63),
+            doubleArrayOf(174.61, 220.00, 261.63, 329.63),
+            doubleArrayOf(196.00, 246.94, 293.66, 392.00)
+        )
+        val bellNotes = doubleArrayOf(523.25, 587.33, 659.25, 783.99, 880.00, 1046.50)
+
+        try {
+            val minBuf = AudioTrack.getMinBufferSize(
+                musicRate,
+                AudioFormat.CHANNEL_OUT_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+            ).coerceAtLeast(chunkSamples * 4)
+
+            track = AudioTrack.Builder()
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_GAME)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build()
+                )
+                .setAudioFormat(
+                    AudioFormat.Builder()
+                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                        .setSampleRate(musicRate)
+                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                        .build()
+                )
+                .setBufferSizeInBytes(minBuf)
+                .setTransferMode(AudioTrack.MODE_STREAM)
+                .build()
+
+            track.setVolume(0.18f)
+            track.play()
+
+            var globalSample = 0L
+            val chordDurationSec = 4.8
+            var bellFreq = bellNotes[0]
+            var bellStartSec = 1.2
+            val rng = Random(2026)
+
+            while (musicEnabled && appInForeground && !released) {
+                for (i in 0 until chunkSamples) {
+                    val t = globalSample.toDouble() / musicRate
+                    val posInCycle = t / chordDurationSec
+                    val chordIdx = (posInCycle.toInt()) % chords.size
+                    val nextChordIdx = (chordIdx + 1) % chords.size
+                    val frac = posInCycle - posInCycle.toInt()
+
+                    // Smooth crossfade in the final 25% of each chord
+                    val blend = if (frac > 0.75) {
+                        val u = (frac - 0.75) / 0.25
+                        (0.5 - 0.5 * cos(PI * u))
+                    } else {
+                        0.0
+                    }
+
+                    val cA = chords[chordIdx]
+                    val cB = chords[nextChordIdx]
+                    val lfo = 0.88 + 0.12 * sin(2.0 * PI * 0.22 * t)
+
+                    var padA = 0.0
+                    var padB = 0.0
+                    for (v in 0 until 4) {
+                        padA += sin(2.0 * PI * cA[v] * t) * 0.22
+                        padB += sin(2.0 * PI * cB[v] * t) * 0.22
+                    }
+                    val pad = (padA * (1.0 - blend) + padB * blend) * lfo
+
+                    // Gentle Zen pentatonic wind-chime bell every ~2.4 seconds
+                    if (t - bellStartSec > 2.4) {
+                        bellStartSec = t
+                        bellFreq = bellNotes[rng.nextInt(bellNotes.size)]
+                    }
+                    val bellDt = (t - bellStartSec).coerceAtLeast(0.0)
+                    val bell = sin(2.0 * PI * bellFreq * bellDt) * exp(-bellDt * 3.4) * 0.16
+
+                    val fadeIn = (t / 1.5).coerceAtMost(1.0)
+                    val sample = (pad + bell) * fadeIn
+                    buffer[i] = (sample * 11500.0).toInt().coerceIn(-32767, 32767).toShort()
+                    globalSample++
+                }
+                track.write(buffer, 0, chunkSamples)
+            }
+        } catch (_: Exception) {
+        } finally {
+            try {
+                track?.pause()
+                track?.flush()
+                track?.release()
+            } catch (_: Exception) {
+            }
+        }
     }
 
     fun playTap() {
@@ -55,6 +203,27 @@ class AsmrSoundEngine(context: Context) {
     fun playCoinPurchase() {
         vibrateTick(18L, 120)
         playPcm(coinBuffer, 0.85f)
+    }
+
+    fun playFever() {
+        playPcm(feverBuffer, 0.90f)
+        if (hapticsEnabled) {
+            try {
+                vibrator?.vibrate(
+                    VibrationEffect.createWaveform(
+                        longArrayOf(0L, 28L, 22L, 38L, 22L, 55L),
+                        intArrayOf(0, 180, 0, 220, 0, 255),
+                        -1
+                    )
+                )
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    fun playLava() {
+        vibrateTick(22L, 130)
+        playPcm(lavaBuffer, 0.78f)
     }
 
     fun playLaser() {
@@ -73,12 +242,12 @@ class AsmrSoundEngine(context: Context) {
         }
     }
 
-    fun playSandDrop(isRainbow: Boolean = false) {
+    fun playSandDrop(isRainbow: Boolean = false, isLava: Boolean = false) {
         vibrateTick(16L, 95)
-        if (isRainbow) {
-            playPcm(magicBuffer, 0.65f)
-        } else {
-            playPcm(sandPourBuffer, 0.72f)
+        when {
+            isLava -> playPcm(lavaBuffer, 0.78f)
+            isRainbow -> playPcm(magicBuffer, 0.65f)
+            else -> playPcm(sandPourBuffer, 0.72f)
         }
     }
 
@@ -145,7 +314,7 @@ class AsmrSoundEngine(context: Context) {
     }
 
     private fun playPcm(samples: ShortArray, volume: Float) {
-        if (!soundEnabled || samples.isEmpty()) return
+        if (!soundEnabled || samples.isEmpty() || released) return
         audioExecutor.execute {
             var track: AudioTrack? = null
             try {
@@ -197,7 +366,6 @@ class AsmrSoundEngine(context: Context) {
     }
 
     private fun synthSandPour(): ShortArray {
-        // Filtered soft granular ASMR rustle
         val n = (sampleRate * 0.19).toInt()
         val out = ShortArray(n)
         val rng = Random(42)
@@ -208,7 +376,6 @@ class AsmrSoundEngine(context: Context) {
             val attack = (t / 0.025).coerceAtMost(1.0)
             val decay = exp(-(t - 0.02).coerceAtLeast(0.0) * 14.0)
             val white = rng.nextDouble(-1.0, 1.0)
-            // Soft bandpass + grain crackles
             lp += 0.24 * (white - lp)
             bp += 0.08 * (lp - bp)
             val shimmer = if (rng.nextFloat() < 0.03f) rng.nextDouble(-0.45, 0.45) else 0.0
@@ -218,8 +385,43 @@ class AsmrSoundEngine(context: Context) {
         return out
     }
 
+    private fun synthLavaSizzle(): ShortArray {
+        val n = (sampleRate * 0.26).toInt()
+        val out = ShortArray(n)
+        val rng = Random(88)
+        var low = 0.0
+        for (i in 0 until n) {
+            val t = i.toDouble() / sampleRate
+            val env = exp(-t * 9.0)
+            val white = rng.nextDouble(-1.0, 1.0)
+            low += 0.18 * (white - low)
+            val rumble = sin(2.0 * PI * (120.0 + 35.0 * sin(25.0 * t)) * t) * 0.45
+            val hiss = (white - low) * 0.55
+            out[i] = ((rumble + hiss) * env * 18500.0).toInt().coerceIn(-32767, 32767).toShort()
+        }
+        return out
+    }
+
+    private fun synthFeverIgnite(): ShortArray {
+        val notes = doubleArrayOf(440.0, 554.37, 659.25, 880.0, 1108.73)
+        val n = (sampleRate * 0.48).toInt()
+        val out = ShortArray(n)
+        for (i in 0 until n) {
+            val t = i.toDouble() / sampleRate
+            var sum = 0.0
+            for (k in notes.indices) {
+                val start = k * 0.055
+                if (t >= start) {
+                    val dt = t - start
+                    sum += sin(2.0 * PI * notes[k] * dt) * exp(-dt * 6.5) * 0.30
+                }
+            }
+            out[i] = (sum * 21000.0).toInt().coerceIn(-32767, 32767).toShort()
+        }
+        return out
+    }
+
     private fun synthCrystalClear(comboIdx: Int): ShortArray {
-        // Pentatonic scale ascending with combo + soft sand shimmer
         val baseFreqs = doubleArrayOf(523.25, 587.33, 659.25, 783.99, 880.0, 1046.5)
         val root = baseFreqs[comboIdx.coerceIn(0, baseFreqs.size - 1)]
         val fifth = root * 1.498
@@ -320,7 +522,6 @@ class AsmrSoundEngine(context: Context) {
     }
 
     private fun synthCoinClink(): ShortArray {
-        // Two-tone metallic gold clink (B5 -> E6)
         val n = (sampleRate * 0.24).toInt()
         val out = ShortArray(n)
         for (i in 0 until n) {
@@ -352,6 +553,8 @@ class AsmrSoundEngine(context: Context) {
     }
 
     fun release() {
+        released = true
+        appInForeground = false
         audioExecutor.shutdownNow()
     }
 }

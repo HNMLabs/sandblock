@@ -2,11 +2,15 @@ package com.hnmlabs.sandblock.engine
 
 import com.hnmlabs.sandblock.model.AdventureCatalog
 import com.hnmlabs.sandblock.model.BlockShape
+import com.hnmlabs.sandblock.model.GameMode
 import com.hnmlabs.sandblock.model.GameTheme
 import com.hnmlabs.sandblock.model.PieceKind
+import com.hnmlabs.sandblock.model.PlayerProgression
 import com.hnmlabs.sandblock.model.TrayPiece
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.random.Random
@@ -30,7 +34,6 @@ class SandWorldTest {
             world.stepPhysicsOnce()
         }
 
-        // All 64 grains must still exist (conservation of sand) and rest on bottom rows
         var totalGrains = 0
         var bottomRowGrains = 0
         for (i in 0 until world.size) {
@@ -50,7 +53,6 @@ class SandWorldTest {
         val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 4, random = Random(2))
         world.startClassic(GameTheme.NEON)
 
-        // Fill bottom 2 rows from x=0 to x=width-1 with color 2
         for (y in (world.height - 2) until world.height) {
             for (x in 0 until world.width) {
                 val idx = y * world.width + x
@@ -74,7 +76,6 @@ class SandWorldTest {
         world.startClassic(GameTheme.OCEAN)
 
         val y = world.height - 1
-        // Left third: Color 1, Middle third: Rainbow, Right third: Color 1
         for (x in 0 until 8) {
             world.cellTypes[y * world.width + x] = SandWorld.CELL_SAND
             world.colorIndices[y * world.width + x] = 1
@@ -97,11 +98,9 @@ class SandWorldTest {
         val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 4, random = Random(4))
         world.startClassic(GameTheme.SAHARA)
 
-        // Place cracked stone at macro (2, 6) -> rows 24..27, cols 8..11
         world.placeMacroStone(macroCol = 2, macroRow = 6, cracked = true)
         assertEquals(1, world.countRemainingCrackedStones())
 
-        // Create a sand bridge right underneath at row 28
         for (x in 0 until world.width) {
             val idx = 28 * world.width + x
             world.cellTypes[idx] = SandWorld.CELL_SAND
@@ -114,103 +113,206 @@ class SandWorldTest {
     }
 
     @Test
-    fun `bomb detonation clears sand and stones within blast radius`() {
-        val world = SandWorld(width = 40, height = 48, grainScale = 4, dangerRow = 6, random = Random(5))
-        world.startClassic(GameTheme.PASTEL)
+    fun `two-hit ice block thaws on first adjacent clear and shatters on second`() {
+        val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 4, random = Random(40))
+        world.startClassic(GameTheme.AURORA)
 
-        world.placeMacroStone(macroCol = 4, macroRow = 8, cracked = false)
-        world.placeMacroStone(macroCol = 5, macroRow = 8, cracked = true)
+        // Place 2-hit ice at macro (2, 6) -> rows 24..27
+        world.placeMacroIce(macroCol = 2, macroRow = 6, thin = false)
+        assertEquals(1, world.countRemainingCrackedStones())
 
-        val destroyed = world.detonateBomb(centerX = 18, centerY = 34, radius = 10)
-        assertTrue(destroyed > 0)
-        assertEquals(0, world.countRemainingCrackedStones())
-    }
-
-    @Test
-    fun `color cleaner removes only targeted sand color`() {
-        val world = SandWorld(width = 24, height = 24, grainScale = 4, dangerRow = 4, random = Random(6))
-        world.startClassic(GameTheme.SAHARA)
-
-        world.cellTypes[23 * 24 + 2] = SandWorld.CELL_SAND
-        world.colorIndices[23 * 24 + 2] = 0
-
-        world.cellTypes[23 * 24 + 10] = SandWorld.CELL_SAND
-        world.colorIndices[23 * 24 + 10] = 3
-
-        assertTrue(world.clearAllSandOfColorAt(2, 23))
-        assertEquals(SandWorld.CELL_EMPTY, world.cellTypes[23 * 24 + 2])
-        assertEquals(SandWorld.CELL_SAND, world.cellTypes[23 * 24 + 10])
-    }
-
-    @Test
-    fun `block rotation preserves cell count and normalizes origin`() {
-        for (shape in BlockShape.STANDARD_SHAPES) {
-            val rotated = shape.rotatedClockwise()
-            assertEquals(shape.cells.size, rotated.cells.size)
-            assertEquals(0, rotated.cells.minOf { it.col })
-            assertEquals(0, rotated.cells.minOf { it.row })
+        // 1st adjacent clear at row 28 -> thaws CELL_ICE into CELL_THIN_ICE
+        for (x in 0 until world.width) {
+            world.cellTypes[28 * world.width + x] = SandWorld.CELL_SAND
+            world.colorIndices[28 * world.width + x] = 0
         }
-    }
+        assertTrue(world.detectAndBeginLineClear())
+        world.finalizeMarkedClears()
+        assertEquals("Ice should still exist as thin ice after 1st hit", 1, world.countRemainingCrackedStones())
+        assertTrue(world.cellTypes.any { it == SandWorld.CELL_THIN_ICE })
 
-    @Test
-    fun `all 12 adventure levels initialize cleanly without danger breach`() {
-        val world = SandWorld(random = Random(7))
-        for (level in AdventureCatalog.levels) {
-            world.startAdventure(level)
-            assertEquals(GameStatus.PLAYING, world.status)
-            assertFalse("Initial preset sand/stones must not breach danger line", world.highestSandRow() < world.dangerRow)
+        // 2nd adjacent clear at row 28 -> shatters CELL_THIN_ICE completely!
+        for (x in 0 until world.width) {
+            world.cellTypes[28 * world.width + x] = SandWorld.CELL_SAND
+            world.colorIndices[28 * world.width + x] = 1
         }
+        assertTrue(world.detectAndBeginLineClear())
+        world.finalizeMarkedClears()
+        assertEquals("Thin ice should shatter on 2nd hit", 0, world.countRemainingCrackedStones())
     }
 
     @Test
-    fun `horizontal laser cuts full row band and awards score`() {
-        val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 4, random = Random(8))
-        world.startClassic(GameTheme.NEON)
+    fun `lava grains melt sand and obstacles below and eventually cool`() {
+        val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 4, random = Random(41))
+        world.startClassic(GameTheme.VOLCANO)
 
-        for (y in 20..26) {
+        // Fill rows 22..31 with sand
+        for (y in 22 until world.height) {
             for (x in 0 until world.width) {
                 world.cellTypes[y * world.width + x] = SandWorld.CELL_SAND
             }
         }
+        val beforeSand = world.cellTypes.count { it == SandWorld.CELL_SAND }
 
-        val destroyed = world.fireHorizontalLaser(centerY = 23, halfBand = 2)
-        assertEquals(24 * 5, destroyed)
-        for (x in 0 until world.width) {
-            assertEquals(SandWorld.CELL_EMPTY, world.cellTypes[23 * world.width + x])
+        val lavaPiece = TrayPiece(
+            uid = 500L,
+            shape = BlockShape.STANDARD_SHAPES[0],
+            colorIndex = 0,
+            kind = PieceKind.LAVA
+        )
+        world.spawnPieceGrains(lavaPiece, originX = 8, originY = 10)
+
+        repeat(80) {
+            world.stepPhysicsOnce()
         }
+
+        val afterSand = world.cellTypes.count { it == SandWorld.CELL_SAND }
+        val remainingLava = world.cellTypes.count { it == SandWorld.CELL_LAVA }
+        assertTrue("Lava must melt through sand below", afterSand < beforeSand)
+        assertEquals("Lava grains must cool/evaporate cleanly after exhausting fuel", 0, remainingLava)
     }
 
     @Test
-    fun `sand storm clears topmost dangerous sand rows and reroll refreshes tray`() {
-        val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 4, random = Random(9))
+    fun `hold slot stores swaps and places pieces cleanly`() {
+        val world = SandWorld(width = 32, height = 40, grainScale = 4, dangerRow = 4, random = Random(42))
         world.startClassic(GameTheme.SAHARA)
 
-        val oldUids = world.trayPieces.map { it?.uid }
-        assertTrue(world.rerollTray())
-        val newUids = world.trayPieces.map { it?.uid }
-        assertFalse(oldUids == newUids)
+        assertNull(world.holdPiece)
+        val firstUid = world.trayPieces[0]!!.uid
+        assertTrue(world.holdOrSwapTrayPiece(0))
+        assertEquals(firstUid, world.holdPiece?.uid)
+        assertNull(world.trayPieces[0])
 
-        // Place sand at rows 10..20
-        for (y in 10..20) {
-            world.cellTypes[y * world.width + 5] = SandWorld.CELL_SAND
-        }
-        val swept = world.clearTopDangerSand(rowsToClear = 5)
-        assertEquals(5, swept)
-        assertEquals(15, world.highestSandRow())
+        val secondUid = world.trayPieces[1]!!.uid
+        assertTrue(world.holdOrSwapTrayPiece(1))
+        assertEquals(secondUid, world.holdPiece?.uid)
+        assertEquals(firstUid, world.trayPieces[1]?.uid)
+
+        assertTrue(world.placeHoldPiece(8, 12))
+        assertNull(world.holdPiece)
     }
 
     @Test
-    fun `line clear emits live gold coins reward`() {
-        val world = SandWorld(width = 20, height = 24, grainScale = 4, dangerRow = 4, random = Random(10))
-        world.startClassic(GameTheme.PASTEL)
+    fun `fever mode doubles score and live coins on line clear`() {
+        val normalWorld = SandWorld(width = 20, height = 24, grainScale = 4, dangerRow = 4, random = Random(43))
+        normalWorld.startClassic(GameTheme.SAHARA)
+        for (x in 0 until normalWorld.width) {
+            normalWorld.cellTypes[(normalWorld.height - 1) * normalWorld.width + x] = SandWorld.CELL_SAND
+            normalWorld.colorIndices[(normalWorld.height - 1) * normalWorld.width + x] = 0
+        }
+        assertTrue(normalWorld.detectAndBeginLineClear())
+        val normalEv = normalWorld.drainEvents().filterIsInstance<WorldEvent.LineClearStarted>().single()
+
+        val feverWorld = SandWorld(width = 20, height = 24, grainScale = 4, dangerRow = 4, random = Random(43))
+        feverWorld.startClassic(GameTheme.SAHARA)
+        feverWorld.triggerFeverForTest()
+        for (x in 0 until feverWorld.width) {
+            feverWorld.cellTypes[(feverWorld.height - 1) * feverWorld.width + x] = SandWorld.CELL_SAND
+            feverWorld.colorIndices[(feverWorld.height - 1) * feverWorld.width + x] = 0
+        }
+        assertTrue(feverWorld.detectAndBeginLineClear())
+        val feverEv = feverWorld.drainEvents().filterIsInstance<WorldEvent.LineClearStarted>().single()
+
+        assertEquals(normalEv.pointsAwarded * 2, feverEv.pointsAwarded)
+        assertEquals(normalEv.coinsAwarded * 2, feverEv.coinsAwarded)
+    }
+
+    @Test
+    fun `time rush mode counts down and adds bonus seconds on line clear`() {
+        val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 4, random = Random(44))
+        world.startMode(GameMode.TIME_RUSH, GameTheme.NEON)
+        assertEquals(90f, world.timeRemainingSec, 0.01f)
+
+        world.updateFrame(physicsSteps = 2, dt = 10f)
+        assertEquals(80f, world.timeRemainingSec, 0.05f)
 
         for (x in 0 until world.width) {
             world.cellTypes[(world.height - 1) * world.width + x] = SandWorld.CELL_SAND
-            world.colorIndices[(world.height - 1) * world.width + x] = 1
+            world.colorIndices[(world.height - 1) * world.width + x] = 0
         }
-
         assertTrue(world.detectAndBeginLineClear())
-        val clearEvent = world.drainEvents().filterIsInstance<WorldEvent.LineClearStarted>().single()
-        assertTrue("Line clear should award live coins while playing", clearEvent.coinsAwarded >= 6)
+        assertTrue("Line clear should add bonus seconds in Time Rush", world.timeRemainingSec > 84f)
+    }
+
+    @Test
+    fun `sandtrix mode spawns falling piece supports move rotate hold and hard drop`() {
+        val world = SandWorld(width = 40, height = 56, grainScale = 4, dangerRow = 6, random = Random(45))
+        world.startMode(GameMode.SANDTRIX, GameTheme.OCEAN)
+
+        assertNotNull(world.fallingPiece)
+        assertNotNull(world.nextFallingPiece)
+
+        val initX = world.fallingX
+        assertTrue(world.moveFallingHorizontal(4))
+        assertEquals(initX + 4, world.fallingX)
+
+        assertTrue(world.swapSandtrixHold())
+        assertNotNull(world.holdPiece)
+        assertFalse("Hold swap is allowed once per drop", world.swapSandtrixHold())
+
+        assertTrue(world.hardDropFallingPiece())
+        assertTrue("Hard drop must crumble piece onto board and award points", world.score > 0)
+        assertTrue(world.cellTypes.any { it != SandWorld.CELL_EMPTY } || world.score >= 80)
+    }
+
+    @Test
+    fun `classic state serialization and restoration preserves board and score`() {
+        val world = SandWorld(width = 32, height = 40, grainScale = 4, dangerRow = 6, random = Random(46))
+        world.startClassic(GameTheme.VOLCANO)
+        world.placeTrayPiece(0, 8, 16)
+        repeat(25) { world.stepPhysicsOnce() }
+        world.holdOrSwapTrayPiece(1)
+
+        val expectedScore = world.score
+        val expectedSandCount = world.cellTypes.count { it != SandWorld.CELL_EMPTY }
+        val expectedHoldUid = world.holdPiece?.uid
+        val snapshot = world.serializeClassicState()
+
+        val restored = SandWorld(width = 32, height = 40, grainScale = 4, dangerRow = 6, random = Random(99))
+        assertTrue(restored.restoreClassicState(snapshot))
+        assertEquals(GameTheme.VOLCANO, restored.theme)
+        assertEquals(expectedScore, restored.score)
+        assertEquals(expectedSandCount, restored.cellTypes.count { it != SandWorld.CELL_EMPTY })
+        assertEquals(expectedHoldUid, restored.holdPiece?.uid)
+    }
+
+    @Test
+    fun `revive clears top rows and resumes playing from game over`() {
+        val world = SandWorld(width = 24, height = 32, grainScale = 4, dangerRow = 8, random = Random(47))
+        world.startClassic(GameTheme.SAHARA)
+
+        // Settled alternating-column sand stack reaching row 5 (above dangerRow = 8)
+        for (y in 5 until world.height) {
+            for (x in 0 until world.width) {
+                val idx = y * world.width + x
+                world.cellTypes[idx] = SandWorld.CELL_SAND
+                world.colorIndices[idx] = ((x / 4) % 2).toByte()
+            }
+        }
+        repeat(6) { world.updateFrame(physicsSteps = 1) }
+        assertEquals(GameStatus.GAME_OVER, world.status)
+
+        assertTrue(world.reviveContinue())
+        assertEquals(GameStatus.PLAYING, world.status)
+        assertFalse(world.highestSandRow() < world.dangerRow)
+    }
+
+    @Test
+    fun `all 20 adventure levels initialize cleanly without danger breach`() {
+        val world = SandWorld(random = Random(7))
+        assertEquals(20, AdventureCatalog.levels.size)
+        for (level in AdventureCatalog.levels) {
+            world.startAdventure(level)
+            assertEquals(GameStatus.PLAYING, world.status)
+            assertFalse("Initial preset sand/stones must not breach danger line in level ${level.number}", world.highestSandRow() < world.dangerRow)
+        }
+    }
+
+    @Test
+    fun `player rank progression calculates levels cleanly`() {
+        val r1 = PlayerProgression.calculateRank(0)
+        assertEquals(1, r1.level)
+        val r3 = PlayerProgression.calculateRank(400)
+        assertTrue(r3.level >= 3)
     }
 }

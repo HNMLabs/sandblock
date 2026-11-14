@@ -13,11 +13,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -30,6 +32,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,13 +49,16 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.hnmlabs.sandblock.audio.AsmrSoundEngine
 import com.hnmlabs.sandblock.data.GamePreferences
+import com.hnmlabs.sandblock.model.AdventureCatalog
+import com.hnmlabs.sandblock.model.GameMode
 import com.hnmlabs.sandblock.model.GameTheme
+import com.hnmlabs.sandblock.model.PlayerProgression
+import com.hnmlabs.sandblock.ui.components.QuestsAchievementsDialog
 import com.hnmlabs.sandblock.ui.components.ShopDialog
 
 @Composable
@@ -61,21 +67,33 @@ fun MainMenuScreen(
     prefs: GamePreferences,
     soundEngine: AsmrSoundEngine,
     highScore: Int,
+    timeRushHighScore: Int,
+    sandtrixHighScore: Int,
+    savedClassicScore: Int?,
     coins: Int,
     totalStars: Int,
     unlockedLevel: Int,
+    unclaimedCount: Int,
     soundEnabled: Boolean,
+    musicEnabled: Boolean,
     hapticsEnabled: Boolean,
     onToggleSound: () -> Unit,
+    onToggleMusic: () -> Unit,
     onToggleHaptics: () -> Unit,
     onSelectTheme: (GameTheme) -> Unit,
     onCoinsChanged: () -> Unit,
-    onStartClassic: () -> Unit,
+    onResumeClassic: () -> Unit,
+    onStartMode: (GameMode) -> Unit,
     onOpenAdventure: () -> Unit
 ) {
     var showThemeDialog by remember { mutableStateOf(false) }
     var showHowToPlay by remember { mutableStateOf(false) }
     var showShopDialog by remember { mutableStateOf(false) }
+    var showQuestsDialog by remember { mutableStateOf(false) }
+
+    val rank = remember(coins, unclaimedCount, highScore) {
+        PlayerProgression.calculateRank(prefs.totalXp)
+    }
 
     val infinite = rememberInfiniteTransition(label = "ambient_sand")
     val fallProgress by infinite.animateFloat(
@@ -93,6 +111,7 @@ fun MainMenuScreen(
     )
     val accent = Color(theme.accentColor)
     val cardColor = Color(theme.surfaceCard)
+    val maxStars = AdventureCatalog.MAX_LEVELS * 3
 
     Box(
         modifier = Modifier
@@ -102,7 +121,7 @@ fun MainMenuScreen(
         // Ambient falling sand grains backdrop
         Canvas(modifier = Modifier.fillMaxSize()) {
             val palette = theme.sandPalette
-            val grainCount = 46
+            val grainCount = 48
             for (i in 0 until grainCount) {
                 val xFrac = ((i * 37) % 100) / 100f
                 val speed = 1f + (i % 3) * 0.5f
@@ -121,7 +140,7 @@ fun MainMenuScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .systemBarsPadding()
-                .padding(horizontal = 22.dp, vertical = 14.dp)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -131,7 +150,7 @@ fun MainMenuScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     StatPill(
                         text = "🛒 🪙 $coins +",
                         bgColor = cardColor,
@@ -141,9 +160,20 @@ fun MainMenuScreen(
                             showShopDialog = true
                         }
                     )
-                    StatPill(text = "⭐ $totalStars/36", bgColor = cardColor, borderColor = accent.copy(alpha = 0.45f))
+                    StatPill(
+                        text = "⭐ $totalStars/$maxStars",
+                        bgColor = cardColor,
+                        borderColor = accent.copy(alpha = 0.45f)
+                    )
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    IconTogglePill(
+                        label = if (musicEnabled) "🎵" else "🔕",
+                        active = musicEnabled,
+                        accent = accent,
+                        cardColor = cardColor,
+                        onClick = onToggleMusic
+                    )
                     IconTogglePill(
                         label = if (soundEnabled) "🔊" else "🔇",
                         active = soundEnabled,
@@ -161,7 +191,7 @@ fun MainMenuScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(34.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Colorful SandBlock Emblem
             Row(
@@ -171,76 +201,121 @@ fun MainMenuScreen(
                 theme.sandPalette.forEach { c ->
                     Box(
                         modifier = Modifier
-                            .size(18.dp)
+                            .size(16.dp)
                             .clip(RoundedCornerShape(5.dp))
                             .background(Color(c))
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = "SANDBLOCK",
-                fontSize = 42.sp,
+                fontSize = 39.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 3.sp,
                 color = Color.White
             )
             Text(
-                text = "KUM FİZİĞİ BLOK BULMACASI",
-                fontSize = 13.sp,
+                text = "KUM FİZİĞİ BLOK BULMACASI v2.0",
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.8.sp,
+                letterSpacing = 1.6.sp,
                 color = accent
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // High Score Showcase Card
+            // Player Rank & High Scores Showcase Card
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        soundEngine.playTap()
+                        showQuestsDialog = true
+                    },
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = cardColor.copy(alpha = 0.92f)),
-                border = BorderStroke(1.5.dp, accent.copy(alpha = 0.45f))
+                border = BorderStroke(1.5.dp, accent.copy(alpha = 0.48f))
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 18.dp, horizontal = 20.dp),
+                        .padding(vertical = 14.dp, horizontal = 18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "🏆 EN YÜKSEK SKOR",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.72f),
-                        letterSpacing = 1.2.sp
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "🎖️ Sv.${rank.level} • ${rank.titleTr}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "${rank.currentLevelXp}/${rank.neededLevelXp} XP",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = accent
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(5.dp))
+                    LinearProgressIndicator(
+                        progress = { rank.progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(5.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = accent,
+                        trackColor = Color.White.copy(alpha = 0.14f)
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "$highScore",
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = accent
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Aktif Tema: ${theme.emoji} ${theme.titleTr}",
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.68f)
-                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        ScoreMiniCol("♾️ KLASİK", "$highScore", accent)
+                        ScoreMiniCol("⏱️ ZAMAN", "$timeRushHighScore", Color(0xFF00F5D4))
+                        ScoreMiniCol("🕹️ SANDTRIX", "$sandtrixHighScore", Color(0xFFFFD166))
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(26.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Classic Mode Button
+            // Resume Saved Classic Game Button (if available)
+            if (savedClassicScore != null) {
+                Button(
+                    onClick = onResumeClassic,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF06D6A0),
+                        contentColor = Color(0xFF081C15)
+                    )
+                ) {
+                    Text(
+                        text = "💾  DEVAM ET (KLASİK SKOR: $savedClassicScore)",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Classic Endless Mode Button
             Button(
-                onClick = onStartClassic,
+                onClick = { onStartMode(GameMode.CLASSIC) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(62.dp),
+                    .height(58.dp),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = accent,
@@ -249,20 +324,84 @@ fun MainMenuScreen(
             ) {
                 Text(
                     text = "▶  KLASİK SONSUZ MOD",
-                    fontSize = 18.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.8.sp
+                    letterSpacing = 0.7.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Adventure Mode Button
+            // 2 New Modes Row: Time Rush & Sandtrix
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Button(
+                    onClick = { onStartMode(GameMode.TIME_RUSH) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(58.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = cardColor,
+                        contentColor = Color.White
+                    ),
+                    border = BorderStroke(1.6.dp, Color(0xFF00F5D4).copy(alpha = 0.75f))
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "⏱️ ZAMANA KARŞI",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF00F5D4)
+                        )
+                        Text(
+                            text = "90sn + Kombo Süre",
+                            fontSize = 10.sp,
+                            color = Color.White.copy(alpha = 0.72f)
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = { onStartMode(GameMode.SANDTRIX) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(58.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = cardColor,
+                        contentColor = Color.White
+                    ),
+                    border = BorderStroke(1.6.dp, Color(0xFFFF9E00).copy(alpha = 0.8f))
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "🕹️ SANDTRIX AKIŞ",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFFFF9E00)
+                        )
+                        Text(
+                            text = "Düşen Kum Blokları",
+                            fontSize = 10.sp,
+                            color = Color.White.copy(alpha = 0.72f)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Adventure Mode Button (20 Levels across 6 Worlds)
             Button(
                 onClick = onOpenAdventure,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp),
+                    .height(56.dp),
                 shape = RoundedCornerShape(18.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = cardColor,
@@ -277,7 +416,7 @@ fun MainMenuScreen(
                 ) {
                     Text(
                         text = "🗺️  MACERA MODU",
-                        fontSize = 17.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Surface(
@@ -285,7 +424,7 @@ fun MainMenuScreen(
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Text(
-                            text = "Bölüm $unlockedLevel / 12",
+                            text = "Bölüm $unlockedLevel / ${AdventureCatalog.MAX_LEVELS}",
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
@@ -295,7 +434,36 @@ fun MainMenuScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Quests, Achievements & Statistics Button
+            OutlinedButton(
+                onClick = {
+                    soundEngine.playTap()
+                    showQuestsDialog = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(15.dp),
+                border = BorderStroke(
+                    1.5.dp,
+                    if (unclaimedCount > 0) Color(0xFF06D6A0) else accent.copy(alpha = 0.65f)
+                )
+            ) {
+                Text(
+                    text = if (unclaimedCount > 0) {
+                        "🎁  GÖREVLER & BAŞARIMLAR ($unclaimedCount ÖDÜL HAZIR!)"
+                    } else {
+                        "🏅  GÜNLÜK GÖREVLER, BAŞARIMLAR & İSTATİSTİK"
+                    },
+                    color = if (unclaimedCount > 0) Color(0xFF06D6A0) else Color.White,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 12.5.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Gold Shop Button
             OutlinedButton(
@@ -305,35 +473,35 @@ fun MainMenuScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
+                    .height(48.dp),
+                shape = RoundedCornerShape(15.dp),
                 border = BorderStroke(1.5.dp, Color(0xFFFFD166).copy(alpha = 0.75f))
             ) {
                 Text(
-                    text = "🛒  ALTIN MAĞAZASI (BOMBA, LAZER & PAKETLER)",
+                    text = "🛒  ALTIN MAĞAZASI (BOMBA, LAV, LAZER & PAKETLER)",
                     color = Color(0xFFFFD166),
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 13.5.sp
+                    fontSize = 12.5.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Bottom Row: Themes & How To Play
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedButton(
                     onClick = { showThemeDialog = true },
                     modifier = Modifier
                         .weight(1f)
-                        .height(50.dp),
+                        .height(48.dp),
                     shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.2.dp, Color.White.copy(alpha = 0.28f))
                 ) {
                     Text(
-                        text = "${theme.emoji} Temalar",
+                        text = "${theme.emoji} 6 Tema",
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -343,7 +511,7 @@ fun MainMenuScreen(
                     onClick = { showHowToPlay = true },
                     modifier = Modifier
                         .weight(1f)
-                        .height(50.dp),
+                        .height(48.dp),
                     shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.2.dp, Color.White.copy(alpha = 0.28f))
                 ) {
@@ -355,14 +523,24 @@ fun MainMenuScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = "ASMR Kum Fiziği • Çevrimdışı Oynanabilir",
+                text = "ASMR Kum Fiziği & Zen Müzik • Çevrimdışı Oynanabilir",
                 fontSize = 11.sp,
                 color = Color.White.copy(alpha = 0.45f)
             )
         }
+    }
+
+    if (showQuestsDialog) {
+        QuestsAchievementsDialog(
+            theme = theme,
+            prefs = prefs,
+            soundEngine = soundEngine,
+            onRewardsChanged = onCoinsChanged,
+            onDismiss = { showQuestsDialog = false }
+        )
     }
 
     if (showShopDialog) {
@@ -396,6 +574,24 @@ fun MainMenuScreen(
 }
 
 @Composable
+private fun ScoreMiniCol(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = label,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White.copy(alpha = 0.65f)
+        )
+        Text(
+            text = value,
+            fontSize = 19.sp,
+            fontWeight = FontWeight.Black,
+            color = color
+        )
+    }
+}
+
+@Composable
 private fun StatPill(
     text: String,
     bgColor: Color,
@@ -416,9 +612,9 @@ private fun StatPill(
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             color = Color.White,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Bold
         )
     }
@@ -434,7 +630,7 @@ private fun IconTogglePill(
 ) {
     Surface(
         modifier = Modifier
-            .size(38.dp)
+            .size(36.dp)
             .clip(CircleShape)
             .clickable(onClick = onClick),
         color = if (active) accent.copy(alpha = 0.22f) else cardColor.copy(alpha = 0.7f),
@@ -442,7 +638,7 @@ private fun IconTogglePill(
         border = BorderStroke(1.2.dp, if (active) accent else Color.White.copy(alpha = 0.2f))
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(text = label, fontSize = 16.sp)
+            Text(text = label, fontSize = 15.sp)
         }
     }
 }
@@ -455,6 +651,7 @@ private fun ThemeSelectorDialog(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
+            modifier = Modifier.heightIn(max = 620.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color(currentTheme.surfaceCard)),
             border = BorderStroke(1.5.dp, Color(currentTheme.accentColor).copy(alpha = 0.6f))
@@ -462,64 +659,74 @@ private fun ThemeSelectorDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(20.dp)
             ) {
                 Text(
-                    text = "🎨 Görsel Tema Seç",
-                    fontSize = 20.sp,
+                    text = "🎨 Görsel Tema Seç (6 Dünya)",
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White
                 )
 
-                GameTheme.entries.forEach { candidate ->
-                    val isSelected = candidate == currentTheme
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(candidate) },
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(candidate.bgBottom)
-                        ),
-                        border = BorderStroke(
-                            width = if (isSelected) 2.2.dp else 1.dp,
-                            color = if (isSelected) Color(candidate.accentColor) else Color.White.copy(alpha = 0.18f)
-                        )
-                    ) {
-                        Row(
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    GameTheme.entries.forEach { candidate ->
+                        val isSelected = candidate == currentTheme
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .clickable { onSelect(candidate) },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(candidate.bgBottom)
+                            ),
+                            border = BorderStroke(
+                                width = if (isSelected) 2.2.dp else 1.dp,
+                                color = if (isSelected) Color(candidate.accentColor) else Color.White.copy(alpha = 0.18f)
+                            )
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "${candidate.emoji} ${candidate.titleTr}",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = candidate.subtitleTr,
-                                    fontSize = 11.sp,
-                                    color = Color.White.copy(alpha = 0.7f)
-                                )
-                            }
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                candidate.sandPalette.take(4).forEach { col ->
-                                    Box(
-                                        modifier = Modifier
-                                            .size(12.dp)
-                                            .clip(CircleShape)
-                                            .background(Color(col))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(13.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${candidate.emoji} ${candidate.titleTr}",
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
                                     )
+                                    Text(
+                                        text = candidate.subtitleTr,
+                                        fontSize = 11.sp,
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                }
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    candidate.sandPalette.take(4).forEach { col ->
+                                        Box(
+                                            modifier = Modifier
+                                                .size(12.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(col))
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
                     onClick = onDismiss,
@@ -543,6 +750,7 @@ private fun HowToPlayDialog(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
+            modifier = Modifier.heightIn(max = 620.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color(theme.surfaceCard)),
             border = BorderStroke(1.5.dp, Color(theme.accentColor).copy(alpha = 0.6f))
@@ -550,23 +758,31 @@ private fun HowToPlayDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(20.dp)
             ) {
                 Text(
-                    text = "📖 Nasıl Oynanır?",
+                    text = "📖 Nasıl Oynanır? (v2.0)",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White
                 )
 
-                RuleItem("1️⃣", "Sürükle ve Bırak", "Alttaki 3 bloktan istediğini oyun alanına sürükle. Üzerine dokunarak 90° döndürebilirsin.")
-                RuleItem("2️⃣", "Kum Fiziği", "Bıraktığın her blok yüzlerce kum tanesine dönüşür ve boşluklara doğru doğal şekilde akar.")
-                RuleItem("3️⃣", "Soldan Sağa Birleştir", "Aynı renkteki kum sol duvardan sağ duvara kesintisiz bir hat kurduğunda patlayarak silinir ve kombo başlatır!")
-                RuleItem("🌈", "Özel Güçlendiriciler", "TNT Bomba alanı patlatır, Renk Silici tek bir rengi yok eder, Joker Kum ise her renkle birleşir!")
-                RuleItem("⚠️", "Sınır Çizgisi", "Kum yığını üstteki kırmızı SINIR çizgisini aşarsa oyun biter.")
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(11.dp)
+                ) {
+                    RuleItem("1️⃣", "Sürükle, Döndür & Sakla", "Blokları alana sürükle, dokunarak 90° döndür veya sol alttaki 📦 SAKLA yuvasına yedekle.")
+                    RuleItem("2️⃣", "Soldan Sağa Birleştir", "Aynı renkteki kum sol duvardan sağ duvara kesintisiz köprü kurduğunda patlar, puan ve 🪙 altın kazandırır!")
+                    RuleItem("🔥", "Kombo Ateşi (Fever 2X)", "Peş peşe hat temizleyerek barı doldur; 10 saniye boyunca tüm skor ve altınlar 2X katlanır!")
+                    RuleItem("🌋", "Lav Kumu & Buz Bloklar", "🌋 Lav blokları kum, taş ve 2 vuruşluk 🧊 Buz Bloklarını eriterek aşağı süzülür.")
+                    RuleItem("🕹️", "4 Farklı Oyun Modu", "Klasik Sonsuz, 90 saniyelik Zamana Karşı, yukarıdan düşen bloklarla Sandtrix Akış ve 20 bölümlük Macera!")
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),

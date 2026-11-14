@@ -1,76 +1,70 @@
-# 🏜️ SandBlock — Android Kum Fiziği Blok Bulmacası
+# 🏜️ SandBlock v2.0 — Android Kum Fiziği Blok Bulmacası
 
-**SandBlock**, klasik sürükle-bırak blok bulmacasını gerçek zamanlı **Hücresel Otomat (Cellular Automata) Kum Fiziği**, **ASMR ses sentezi** ve **stratejik güçlendiricilerle** birleştiren yerel (Native) bir Android oyunudur.
+**SandBlock**, klasik sürükle-bırak ve düşen blok bulmacalarını gerçek zamanlı **60 FPS Hücresel Otomat (Cellular Automata) Kum Fiziği**, **ASMR ses & Zen müzik sentezi**, **Lav & Buz mekanikleri** ve **zengin ilerleme sistemiyle** birleştiren yerel (Native) bir Android oyunudur.
 
 ## 📥 İndir (Android APK)
 
-- **[📲 SandBlock APK İndir (Doğrudan İndirme — v1.1.0)](https://github.com/HNMLabs/sandblock/raw/main/releases/SandBlock-v1.1.0.apk)** *(Android 8.0 / API 26+)*
+- **[📲 SandBlock APK İndir (Doğrudan İndirme — v2.0.0)](https://github.com/HNMLabs/sandblock/raw/main/releases/SandBlock-v2.0.0.apk)** *(Android 8.0 / API 26+)*
 
-## ✨ Özellikler
+## ✨ v2.0 Yenilikleri ve Özellikler
 
-- **Gerçekçi Kum Fiziği (60 FPS):** Oyun alanına bırakılan her blok yüzlerce kum tanesine dağılır, yerçekimiyle boşluklara akar ve 45° doğal kum tepeleri oluşturur.
-- **Sürükle-Bırak & Dokun-Döndür Kontrolleri:**
-  - Ekranın altındaki 3'lü tepsideki bloklara **dokunarak 90° döndürebilir**, parmağınızla **oyun alanına sürükleyip** bırakabilirsiniz.
-  - Parmak altı kaydırma ofseti ve canlı hayalet önizleme (ghost preview) ile tek elle rahat oynanış.
-- **Soldan Sağa Köprü, Kombo & Canlı Altın Kazanımı:**
-  - Aynı renkteki kum taneleri **sol duvardan sağ duvara** kesintisiz bir şerit oluşturduğunda parlayarak temizlenir ve **oyun oynarken anında `🪙` altın** kazandırır!
-  - Üstte kalan kumların çökmesiyle oluşan ardışık temizlemeler **Kombo Çarpanı (`x2`, `x3`, ...)** ve ekstra altın kazandırır.
-- **2 Oyun Modu:**
-  1. **Klasik Sonsuz Mod:** Skor arttıkça 3 renkten 5 renge çıkan dinamik zorluk ve yüksek skor yarışı.
-  2. **Macera Modu (12 El Yapımı Bölüm):** 4 farklı dünyada özel taş engeller, kum hunileri, hamle sınırları, **Çatlak Kumtaşı (`🪨`)** hedefleri ve **3 Yıldız** derecelendirme sistemi.
-- **🛒 Oyun İçi Altın Mağazası & 6 Güçlendirici:**
-  - Oyun devam ederken sağ üstteki **`🛒 🪙` Mağaza** butonuna dokunarak kazandığınız altınlarla anında alışveriş yapabilirsiniz:
-  - **💣 TNT Bomba:** Geniş bir krater açarak kumları ve taş engelleri patlatır.
-  - **⚡ Yatay Lazer:** Seçilen satırı boydan boya lazerle keserek üstteki kumları çökertir.
-  - **🎨 Renk Silici:** Seçilen renkteki tüm kum tanelerini tek dokunuşla temizler.
-  - **🌈 Gökkuşağı Joker Kum:** Tepsideki bir bloğu her renkle eşleşebilen joker kuma dönüştürür.
-  - **🔄 Tepsi Yenile:** Alttaki 3 bloğu anında yeni şekil ve renklerle değiştirir.
-  - **🌪️ Kum Fırtınası (Acil Kurtarma):** Mağazadan alındığı anda en üstteki tehlikeli kum yığınını süpürür.
-  - **📦 Avantaj Paketleri & 👑 Altın Bereketi:** İndirimli 3'lü TNT / Süper Kombo paketleri ve kalıcı altın çarpanı yükseltmesi (`+%25` → `+%100`).
-- **4 Görsel Tema:**
-  - 🏜️ **Sahra Çölü** • 🌃 **Neon Gece** • 🌊 **Derin Okyanus** • 🍬 **Pastel Rüya**
-- **Prosedürel ASMR Ses & Haptik Titreşim Motoru:**
-  - Dış ses dosyasına ihtiyaç duymadan gerçek zamanlı PCM ses sentezi ile kum dökülme hışırtısı, ahşap dokunuş tıkırtısı, pentatonik kristal kombo çanları ve titreşim geri bildirimi.
+- **4 Farklı Oyun Modu:**
+  1. **♾️ Klasik Sonsuz Mod:** Dinamik renk artışı, **Otomatik Kayıt & Kaldığın Yerden Devam Et** desteği ve yüksek skor yarışı.
+  2. **⏱️ Zamana Karşı (Time Rush):** 90 saniyelik heyecan dolu geri sayım! Temizlediğiniz her kum hattı ve kombo sayaca ekstra saniyeler ekler.
+  3. **🕹️ Sandtrix Akış Modu:** Yukarıdan gerçek zamanlı düşen kum bloklarını kaydırarak/tuşlarla yönlendirin, döndürün ve hızla indirip kum tanelerine dağıtın!
+  4. **🗺️ Macera Modu (6 Dünya, 20 Bölüm, 60 Yıldız):** Özel arazi engelleri, hamle sınırları, **Çatlak Kumtaşı (`🪨`)** ve **2 katmanlı Buz Bloklar (`🧊`)** ile 20 el yapımı bölüm.
+- **🌋 Kor Lav & 🧊 Buz Blok Mekanikleri:**
+  - **Lav Blokları (`PieceKind.LAVA`):** Dokunduğu kumları, taşları ve buzulları eriterek aşağı süzülür ve ekstra puan kazandırır.
+  - **Buz Blokları (`CELL_ICE` → `CELL_THIN_ICE`):** Yanında gerçekleşen ilk hat temizliğinde çatlar, ikinci temizlemede (veya bomba/lazer/lav ile) tamamen parçalanır!
+- **📦 Blok Saklama Yuvası (Hold) & 3B Kum Fiziği:**
+  - Hem sürükle-bırak hem de Sandtrix modlarında istediğiniz bloğu **`📦 SAKLA`** yuvasına yedekleyip kritik anlarda kullanabilirsiniz.
+  - Hızlandırılmış 60 FPS kum akışı, sarsıntı efektleri (Screen Shake) ve kum tepelerinde 3 boyutlu güneş ışığı yansımaları.
+- **🔥 Kombo Ateşi (Fever 2X Modu):**
+  - Blok yerleştirip hat temizledikçe Ateş barı dolar; tam dolduğunda **10 saniye boyunca tüm puanlar ve kazanılan altınlar 2 katına (`2X`)** çıkar!
+- **🎖️ Seviye/XP, Günlük Görevler, Başarımlar & İstatistikler:**
+  - Her gün ücretsiz **Günlük Giriş Hediyesi (`+50 🪙`)**, yenilenen **3 Günlük Görev**, **10 Başarım Rozeti**, oyuncu unvan/seviye sistemi ve detaylı ömür boyu istatistik ekranı.
+- **🛒 Oyun İçi Altın Mağazası & İkinci Şans (Revive):**
+  - **💣 TNT Bomba**, **⚡ Yatay Lazer**, **🎨 Renk Silici**, **🌈 Joker Kum**, **🔄 Tepsi Yenile**, anında **🌪️ Kum Fırtınası**, **🌋 Lav Yağmuru**, avantaj paketleri, kalıcı **👑 Altın Bereketi** çarpanı ve oyun bittiğinde **💖 Altınla İkinci Şans (Revive)**!
+- **6 Görsel Tema & Prosedürel Zen Müzik:**
+  - 🏜️ **Sahra Çölü** • 🌊 **Derin Okyanus** • 🌃 **Neon Gece** • 🍬 **Pastel Rüya** • 🌋 **Volkanik Magma** • 🌌 **Kuzey Işıkları**
+  - Dış ses dosyası gerektirmeyen gerçek zamanlı ASMR kum hışırtısı ve ayrı tuşla açılıp kapatılabilen **Pentatonik Zen Arka Plan Müziği (`🎵`)**.
 
 ## 🏗️ Proje Mimarisi
 
 ```text
 app/src/main/java/com/hnmlabs/sandblock/
-├── MainActivity.kt                  # Uygulama giriş noktası ve ekran yönlendirmesi
+├── MainActivity.kt                        # Uygulama giriş noktası, mod yönlendirmesi ve ses yaşam döngüsü
 ├── model/
-│   ├── GameTheme.kt                 # 4 görsel tema paleti ve renk matematiği
-│   ├── BlockShape.kt                # Poliomino şekilleri, döndürme ve 3'lü tepsi üretici
-│   └── AdventureLevel.kt            # 12 macera bölümü, arazi şablonları ve güçlendiriciler
+│   ├── GameTheme.kt                       # 6 görsel tema paleti, gökkuşağı & lav renk matematiği
+│   ├── BlockShape.kt                      # Poliomino şekilleri, döndürme ve özel Lav/Joker/TNT üretici
+│   ├── ProgressionModels.kt               # Oyun modları, XP/Rütbe sistemi, günlük görevler ve 10 başarım
+│   └── AdventureLevel.kt                  # 6 dünya, 20 macera bölümü, arazi şablonları ve güçlendiriciler
 ├── engine/
-│   └── SandWorld.kt                 # Hücresel otomat kum fiziği, 8-yönlü BFS köprü tespiti ve piksel tamponu
+│   └── SandWorld.kt                       # Hücresel otomat kum & lav fiziği, 2-vuruşluk buz, Fever, Hold ve kayıt
 ├── audio/
-│   └── AsmrSoundEngine.kt           # Prosedürel PCM AudioTrack ASMR ses ve titreşim motoru
+│   └── AsmrSoundEngine.kt                 # Prosedürel PCM ASMR ses efektleri, Zen müzik döngüsü ve haptik motoru
 ├── data/
-│   └── GamePreferences.kt           # Yüksek skor, altın, güçlendirici, yıldız ve ayar kaydı
+│   └── GamePreferences.kt                 # Mod rekorları, altın, XP, görevler, başarımlar ve klasik otomatik kayıt
 └── ui/
-    ├── stage/SandStageView.kt       # 60 FPS özel Canvas görünümü, parçacık efektleri ve dokunmatik kontrol
+    ├── stage/SandStageView.kt             # 60 FPS özel Canvas görünümü, Fever alevleri, sarsıntı ve kontroller
+    ├── components/
+    │   ├── ShopDialog.kt                  # Oyun içi ve menü Altın Mağazası
+    │   └── QuestsAchievementsDialog.kt    # Günlük Hediye, Görevler, Başarımlar ve İstatistik ekranı
     └── screens/
-        ├── MainMenuScreen.kt        # Canlı kum arka planlı ana menü ve tema seçici
-        ├── AdventureMapScreen.kt    # 4 dünya, 12 bölümlük yıldızlı macera haritası
-        └── GameScreen.kt            # Oyun içi üst HUD, güçlendirici çubuğu ve diyaloglar
+        ├── MainMenuScreen.kt              # 4 mod seçimi, devam et butonu, rütbe kartı ve tema seçici
+        ├── AdventureMapScreen.kt          # 6 dünya, 20 bölümlük yıldızlı macera haritası
+        └── GameScreen.kt                  # Oyun içi HUD, Fever & Süre çubukları, güçlendiriciler ve Revive
 ```
 
 ## 🚀 Derleme ve Çalıştırma
 
-### Android Studio ile
-1. Projeyi **Android Studio (Ladybug veya üzeri)** ile açın.
-2. Gradle senkronizasyonunun tamamlanmasını bekleyin.
-3. Bir Android cihaz veya emülatör (API 26 / Android 8.0+) seçip **Run (`▶`)** tuşuna basın.
-
-### Komut Satırı (CLI) ile
 ```bash
 # Birim testlerini çalıştır
 ./gradlew testDebugUnitTest
 
-# Debug APK oluştur
-./gradlew assembleDebug
+# Release APK oluştur
+./gradlew assembleRelease
 ```
-Derlenen APK dosyası `app/build/outputs/apk/debug/app-debug.apk` konumunda üretilir.
 
 ## 📄 Lisans
 Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır.

@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -51,6 +51,8 @@ fun AdventureMapScreen(
     )
     val accent = Color(theme.accentColor)
     val cardBg = Color(theme.surfaceCard)
+    val maxStars = AdventureCatalog.MAX_LEVELS * 3
+    val levels = AdventureCatalog.levels
 
     Column(
         modifier = Modifier
@@ -97,7 +99,7 @@ fun AdventureMapScreen(
                 border = BorderStroke(1.dp, accent.copy(alpha = 0.5f))
             ) {
                 Text(
-                    text = "⭐ $totalStars / 36",
+                    text = "⭐ $totalStars / $maxStars",
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                     color = accent,
                     fontWeight = FontWeight.Bold,
@@ -111,11 +113,12 @@ fun AdventureMapScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(AdventureCatalog.levels, key = { it.number }) { level ->
+            itemsIndexed(levels, key = { _, lvl -> lvl.number }) { index, level ->
                 val isUnlocked = level.number <= unlockedLevel
                 val stars = getStarsForLevel(level.number)
+                val isNewWorld = index == 0 || levels[index - 1].worldName != level.worldName
 
-                if ((level.number - 1) % 3 == 0) {
+                if (isNewWorld) {
                     Text(
                         text = "${level.theme.emoji} ${level.worldName.uppercase()}",
                         modifier = Modifier.padding(top = 8.dp, bottom = 2.dp, start = 4.dp),
@@ -201,7 +204,10 @@ private fun LevelCard(
                         color = if (isUnlocked) Color.White else Color.White.copy(alpha = 0.45f)
                     )
                     if (level.requireClearCrackedStones) {
-                        Text(text = "🪨", fontSize = 13.sp)
+                        Text(
+                            text = if (level.number >= 16) "🧊" else "🪨",
+                            fontSize = 13.sp
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(3.dp))

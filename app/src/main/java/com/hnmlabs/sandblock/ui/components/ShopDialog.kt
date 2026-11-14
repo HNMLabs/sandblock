@@ -52,6 +52,7 @@ fun ShopDialog(
     inActiveGame: Boolean,
     canSweepSandNow: Boolean = false,
     onExecuteSandSweep: (() -> Boolean)? = null,
+    onExecuteLavaStorm: (() -> Boolean)? = null,
     onPurchaseChanged: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -147,33 +148,59 @@ fun ShopDialog(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Instant Emergency In-Game Item
-                    if (inActiveGame && onExecuteSandSweep != null) {
+                    // Instant Emergency In-Game Interventions
+                    if (inActiveGame) {
                         SectionLabel("🆘 ACİL OYUN İÇİ MÜDAHALE", accent)
-                        val canBuySweep = coins >= GamePreferences.SAND_SWEEP_COST && canSweepSandNow
-                        ShopRowCard(
-                            emoji = "🌪️",
-                            title = "Kum Fırtınası (Üstü Süpür)",
-                            subtitle = if (canSweepSandNow) {
-                                "Anında en üstteki tehlikeli kum tepelerini temizler!"
-                            } else {
-                                "Alanda süpürülecek kum olduğunda kullanılır."
-                            },
-                            ownedBadge = "ANINDA",
-                            costText = "🪙 ${GamePreferences.SAND_SWEEP_COST}",
-                            enabled = canBuySweep,
-                            itemBg = itemBg,
-                            accent = Color(0xFFFF6B6B),
-                            onBuy = {
-                                if (prefs.coins >= GamePreferences.SAND_SWEEP_COST && onExecuteSandSweep()) {
-                                    prefs.spendCoins(GamePreferences.SAND_SWEEP_COST)
-                                    soundEngine.playCoinPurchase()
-                                    localRefresh++
-                                    onPurchaseChanged()
-                                    onDismiss()
+
+                        if (onExecuteSandSweep != null) {
+                            val canBuySweep = coins >= GamePreferences.SAND_SWEEP_COST && canSweepSandNow
+                            ShopRowCard(
+                                emoji = "🌪️",
+                                title = "Kum Fırtınası (Üstü Süpür)",
+                                subtitle = if (canSweepSandNow) {
+                                    "Anında en üstteki tehlikeli kum tepelerini temizler!"
+                                } else {
+                                    "Alanda süpürülecek kum olduğunda kullanılır."
+                                },
+                                ownedBadge = "ANINDA",
+                                costText = "🪙 ${GamePreferences.SAND_SWEEP_COST}",
+                                enabled = canBuySweep,
+                                itemBg = itemBg,
+                                accent = Color(0xFFFF6B6B),
+                                onBuy = {
+                                    if (prefs.coins >= GamePreferences.SAND_SWEEP_COST && onExecuteSandSweep()) {
+                                        prefs.spendCoins(GamePreferences.SAND_SWEEP_COST)
+                                        soundEngine.playCoinPurchase()
+                                        localRefresh++
+                                        onPurchaseChanged()
+                                        onDismiss()
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
+
+                        if (onExecuteLavaStorm != null) {
+                            val canBuyLava = coins >= GamePreferences.LAVA_STORM_COST
+                            ShopRowCard(
+                                emoji = "🌋",
+                                title = "Lav Yağmuru (5 Kor Akışı)",
+                                subtitle = "Yukarıdan akan kızgın lav dalgası kum, taş ve buz engellerini eritir!",
+                                ownedBadge = "ANINDA",
+                                costText = "🪙 ${GamePreferences.LAVA_STORM_COST}",
+                                enabled = canBuyLava,
+                                itemBg = itemBg,
+                                accent = Color(0xFFFF6D00),
+                                onBuy = {
+                                    if (prefs.coins >= GamePreferences.LAVA_STORM_COST && onExecuteLavaStorm()) {
+                                        prefs.spendCoins(GamePreferences.LAVA_STORM_COST)
+                                        soundEngine.playCoinPurchase()
+                                        localRefresh++
+                                        onPurchaseChanged()
+                                        onDismiss()
+                                    }
+                                }
+                            )
+                        }
                     }
 
                     // Individual Boosters

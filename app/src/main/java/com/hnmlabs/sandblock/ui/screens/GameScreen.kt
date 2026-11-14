@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -50,14 +51,18 @@ import com.hnmlabs.sandblock.engine.SandWorld
 import com.hnmlabs.sandblock.model.AdventureCatalog
 import com.hnmlabs.sandblock.model.AdventureLevel
 import com.hnmlabs.sandblock.model.BoosterType
+import com.hnmlabs.sandblock.model.GameMode
 import com.hnmlabs.sandblock.model.GameTheme
 import com.hnmlabs.sandblock.ui.components.ShopDialog
 import com.hnmlabs.sandblock.ui.stage.HudSnapshot
 import com.hnmlabs.sandblock.ui.stage.SandStageView
+import java.util.Locale
 
 @Composable
 fun GameScreen(
+    initialMode: GameMode,
     initialLevel: AdventureLevel?,
+    resumeClassic: Boolean = false,
     selectedTheme: GameTheme,
     prefs: GamePreferences,
     soundEngine: AsmrSoundEngine,
@@ -65,14 +70,23 @@ fun GameScreen(
     onExitToAdventureMap: () -> Unit
 ) {
     var currentLevel by remember { mutableStateOf(initialLevel) }
+    var currentMode by remember { mutableStateOf(if (initialLevel != null) GameMode.ADVENTURE else initialMode) }
     var sessionKey by remember { mutableIntStateOf(1) }
 
     val world = remember {
         SandWorld().also { w ->
             if (initialLevel != null) {
                 w.startAdventure(initialLevel)
+            } else if (resumeClassic && initialMode == GameMode.CLASSIC) {
+                val snap = prefs.loadSavedClassicSnapshot()
+                if (snap == null || !w.restoreClassicState(snap)) {
+                    w.startMode(GameMode.CLASSIC, selectedTheme)
+                }
             } else {
-                w.startClassic(selectedTheme)
+                if (initialMode == GameMode.CLASSIC) {
+                    prefs.clearSavedClassicSnapshot()
+                }
+                w.startMode(initialMode, selectedTheme)
             }
         }
     }
@@ -86,14 +100,17 @@ fun GameScreen(
     var hud by remember {
         mutableStateOf(
             HudSnapshot(
-                score = 0,
-                linesCleared = 0,
-                combo = 0,
-                movesRemaining = initialLevel?.maxMoves,
+                score = world.score,
+                linesCleared = world.linesCleared,
+                combo = world.combo,
+                movesRemaining = world.movesRemaining,
                 crackedRemaining = if (initialLevel?.requireClearCrackedStones == true) {
                     world.countRemainingCrackedStones()
                 } else 0,
-                status = GameStatus.PLAYING,
+                timeRemainingDeciSec = (world.timeRemainingSec * 10f).toInt(),
+                feverStep = (world.feverCharge * 20f).toInt(),
+                isFeverActive = world.isFeverActive,
+                status = world.status,
                 wonStars = 0
             )
         )
@@ -104,6 +121,46 @@ fun GameScreen(
     var earnedSessionCoins by remember(sessionKey) { mutableIntStateOf(0) }
     var liveEarnedCoinsInRun by remember(sessionKey) { mutableIntStateOf(0) }
     var isNewHighScore by remember(sessionKey) { mutableStateOf(false) }
+    var revivesUsed by remember(sessionKey) { mutableIntStateOf(0) }
+
+    fun saveClassicIfActive() {
+        if (world.mode == GameMode.CLASSIC && world.status == GameStatus.PLAYING && world.score > 0) {
+            prefs.saveClassicSnapshot(world.serializeClassicState(), world.score)
+        }
+    }
+
+    LaunchedEffect(sessionKey) {
+        if (!(sessionKey == 1 && resumeClassic)) {
+            prefs.recordGameStarted()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            saveClassicIfActive()
+        }
+    }
+
+    fun modeSavedHighScore(mode: GameMode): Int = when (mode) {
+        GameMode.CLASSIC -> prefs.highScore
+        GameMode.TIME_RUSH -> prefs.timeRushHighScore
+        GameMode.SANDTRIX -> prefs.sandtrixHighScore
+        GameMode.ADVENTURE -> 0
+    }
+
+    fun updateModeHighScore(mode: GameMode, newScore: Int): Boolean {
+        val prev = modeSavedHighScore(mode)
+        if (newScore > prev) {
+            when (mode) {
+                GameMode.CLASSIC -> prefs.highScore = newScore
+                GameMode.TIME_RUSH -> prefs.timeRushHighScore = newScore
+                GameMode.SANDTRIX -> prefs.sandtrixHighScore = newScore
+                GameMode.ADVENTURE -> Unit
+            }
+            return true
+        }
+        return false
+    }
 
     fun restartGame(nextLevel: AdventureLevel? = currentLevel) {
         currentLevel = nextLevel
@@ -111,9 +168,13 @@ fun GameScreen(
         isPaused = false
         isShopOpen = false
         if (nextLevel != null) {
+            currentMode = GameMode.ADVENTURE
             world.startAdventure(nextLevel)
         } else {
-            world.startClassic(selectedTheme)
+            if (currentMode == GameMode.CLASSIC) {
+                prefs.clearSavedClassicSnapshot()
+            }
+            world.startMode(currentMode, selectedTheme)
         }
         stageRef?.activeTargetBooster = null
         stageRef?.isGamePaused = false
@@ -127,12 +188,15 @@ fun GameScreen(
             crackedRemaining = if (nextLevel?.requireClearCrackedStones == true) {
                 world.countRemainingCrackedStones()
             } else 0,
+            timeRemainingDeciSec = (world.timeRemainingSec * 10f).toInt(),
+            feverStep = 0,
+            isFeverActive = false,
             status = GameStatus.PLAYING,
             wonStars = 0
         )
     }
 
-    LaunchedEffect(hud.status, sessionKey) {
+    LaunchedEffect(hud.status, sessionKey, revivesUsed) {
         if (!sessionFinalized && hud.status != GameStatus.PLAYING) {
             sessionFinalized = true
             activeTargetBooster = null
@@ -152,13 +216,16 @@ fun GameScreen(
                 earnedSessionCoins = liveEarnedCoinsInRun + bonusAwarded
                 inventoryTick++
             } else if (hud.status == GameStatus.GAME_OVER) {
+                if (currentMode == GameMode.CLASSIC) {
+                    prefs.clearSavedClassicSnapshot()
+                }
                 if (lvl == null) {
-                    if (hud.score > prefs.highScore) {
+                    if (updateModeHighScore(currentMode, hud.score)) {
                         isNewHighScore = true
-                        prefs.highScore = hud.score
                     }
                     val endBonusRaw = (hud.score / 80).coerceAtLeast(if (hud.score >= 150) 4 else 0)
                     val endBonus = prefs.awardLiveCoins(endBonusRaw)
+                    prefs.addXp((hud.score / 55).coerceIn(5, 90))
                     earnedSessionCoins = liveEarnedCoinsInRun + endBonus
                     inventoryTick++
                 } else {
@@ -179,10 +246,12 @@ fun GameScreen(
                 stageRef?.activeTargetBooster = null
             }
             !isPaused && hud.status == GameStatus.PLAYING -> {
+                saveClassicIfActive()
                 isPaused = true
                 stageRef?.isGamePaused = true
             }
             else -> {
+                saveClassicIfActive()
                 if (currentLevel != null) onExitToAdventureMap() else onExitToMenu()
             }
         }
@@ -197,8 +266,8 @@ fun GameScreen(
     val goldColor = Color(0xFFFFD166)
 
     val currentCoins = remember(inventoryTick, hud.score) { prefs.coins }
-    val currentBest = remember(hud.score, sessionKey) {
-        maxOf(prefs.highScore, if (currentLevel == null) hud.score else 0)
+    val currentBest = remember(hud.score, sessionKey, currentMode) {
+        maxOf(modeSavedHighScore(currentMode), if (currentLevel == null) hud.score else 0)
     }
 
     Column(
@@ -211,7 +280,7 @@ fun GameScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 6.dp),
+                .padding(horizontal = 12.dp, vertical = 5.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -222,6 +291,7 @@ fun GameScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .clickable {
                         soundEngine.playTap()
+                        saveClassicIfActive()
                         isPaused = true
                         stageRef?.isGamePaused = true
                     },
@@ -240,12 +310,12 @@ fun GameScreen(
                 if (lvl == null) {
                     Text(
                         text = "${hud.score}",
-                        fontSize = 25.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Black,
                         color = Color.White
                     )
                     Text(
-                        text = "🏆 $currentBest  •  HAT: ${hud.linesCleared}",
+                        text = "${currentMode.badgeEmoji} $currentBest  •  HAT: ${hud.linesCleared}",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = accent
@@ -260,14 +330,14 @@ fun GameScreen(
                     )
                     Text(
                         text = "${hud.score} / ${lvl.targetScore}",
-                        fontSize = 21.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Black,
                         color = Color.White
                     )
                 }
             }
 
-            // Interactive Gold & In-Game Shop Button!
+            // Interactive Gold & In-Game Shop Button
             Column(horizontalAlignment = Alignment.End) {
                 Surface(
                     modifier = Modifier
@@ -286,12 +356,9 @@ fun GameScreen(
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
-                            text = "🛒",
-                            fontSize = 13.sp
-                        )
+                        Text(text = "🛒", fontSize = 12.5.sp)
                         Text(
                             text = "🪙 $currentCoins",
                             fontSize = 12.5.sp,
@@ -309,7 +376,7 @@ fun GameScreen(
                 if (hud.combo >= 2) {
                     Text(
                         text = "🔥 x${hud.combo}",
-                        fontSize = 12.sp,
+                        fontSize = 11.5.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color(0xFFFFEA00)
                     )
@@ -317,28 +384,61 @@ fun GameScreen(
             }
         }
 
-        // 2. Adventure Progress Strip (only in Adventure Mode)
-        currentLevel?.let { lvl ->
-            val progress = (hud.score.toFloat() / lvl.targetScore.coerceAtLeast(1)).coerceIn(0f, 1f)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 2.dp)
-            ) {
+        // 2. Time Rush Countdown OR Adventure Progress + Fever Meter Strip
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 2.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            if (currentMode == GameMode.TIME_RUSH) {
+                val secs = hud.timeRemainingDeciSec / 10f
+                val timeRatio = (secs / SandWorld.TIME_RUSH_INITIAL_SEC).coerceIn(0f, 1f)
+                val urgent = secs <= 15f
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "⏱️ ZAMANA KARŞI (Her Hat +Saniye)",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
+                    Text(
+                        text = String.format(Locale.US, "%.1f sn", secs),
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Black,
+                        color = if (urgent) Color(0xFFFF4D4D) else Color(0xFF00F5D4)
+                    )
+                }
+                LinearProgressIndicator(
+                    progress = { timeRatio },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(5.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = if (urgent) Color(0xFFFF4D4D) else Color(0xFF00F5D4),
+                    trackColor = Color.White.copy(alpha = 0.14f)
+                )
+            }
+
+            currentLevel?.let { lvl ->
+                val progress = (hud.score.toFloat() / lvl.targetScore.coerceAtLeast(1)).coerceIn(0f, 1f)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = "Hat: ${hud.linesCleared}/${lvl.targetClears}",
-                        fontSize = 11.sp,
+                        fontSize = 10.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White.copy(alpha = 0.85f)
                     )
                     if (lvl.requireClearCrackedStones) {
                         Text(
-                            text = "🪨 Çatlak Taş: ${hud.crackedRemaining}",
-                            fontSize = 11.sp,
+                            text = "🧊 Engel: ${hud.crackedRemaining}",
+                            fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFFFB703)
                         )
@@ -346,13 +446,12 @@ fun GameScreen(
                     hud.movesRemaining?.let { rem ->
                         Text(
                             text = "Hamle: $rem",
-                            fontSize = 11.sp,
+                            fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (rem <= 5) Color(0xFFFF6B6B) else accent
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(3.dp))
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
@@ -363,13 +462,37 @@ fun GameScreen(
                     trackColor = Color.White.copy(alpha = 0.14f)
                 )
             }
+
+            // Fever Charge / Active 2X Bar
+            val feverProgress = (hud.feverStep / 20f).coerceIn(0f, 1f)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = if (hud.isFeverActive) "🔥 2X FEVER!" else "🔥 Ateş",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (hud.isFeverActive) Color(0xFFFFEA00) else Color.White.copy(alpha = 0.72f)
+                )
+                LinearProgressIndicator(
+                    progress = { feverProgress },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = if (hud.isFeverActive) Color(0xFFFF6D00) else Color(0xFFFFB703),
+                    trackColor = Color.White.copy(alpha = 0.12f)
+                )
+            }
         }
 
         // 3. 5-Slot Interactive Power-Up & Quick-Buy Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+                .padding(horizontal = 10.dp, vertical = 3.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             BoosterType.entries.forEach { booster ->
@@ -389,7 +512,6 @@ fun GameScreen(
                                 return@clickable
                             }
 
-                            // If player has 0 of this item and not enough coins, open Shop to show catalog!
                             if (!canAfford) {
                                 soundEngine.playTap()
                                 isShopOpen = true
@@ -436,20 +558,17 @@ fun GameScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 5.dp, horizontal = 3.dp),
+                            .padding(vertical = 4.5.dp, horizontal = 3.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            Text(
-                                text = booster.emoji,
-                                fontSize = 13.sp
-                            )
+                            Text(text = booster.emoji, fontSize = 12.5.sp)
                             Text(
                                 text = booster.shortTitleTr,
-                                fontSize = 10.5.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White.copy(alpha = if (canAfford) 1f else 0.48f),
                                 maxLines = 1
@@ -458,7 +577,7 @@ fun GameScreen(
                         val badgeText = if (count > 0) "x$count" else "🪙${booster.coinCost}"
                         Text(
                             text = badgeText,
-                            fontSize = 10.sp,
+                            fontSize = 9.5.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = if (count > 0) accent else goldColor.copy(alpha = if (canAfford) 0.95f else 0.45f)
                         )
@@ -467,7 +586,7 @@ fun GameScreen(
             }
         }
 
-        // 4. Custom 60FPS Sand Board + 3-Piece Tray View
+        // 4. Custom 60FPS Sand Board + Hold/Tray/Sandtrix View
         AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
@@ -490,6 +609,15 @@ fun GameScreen(
                         prefs.consumeOrBuyBooster(usedBooster)
                         activeTargetBooster = null
                         inventoryTick++
+                    },
+                    onPiecePlacedStat = {
+                        prefs.recordPiecePlaced()
+                    },
+                    onLineClearStat = { comboCount, brokenCount ->
+                        prefs.recordLineClearStats(comboCount, brokenCount)
+                    },
+                    onAutoSaveCheckpoint = {
+                        saveClassicIfActive()
                     }
                 ).also { view ->
                     stageRef = view
@@ -502,7 +630,7 @@ fun GameScreen(
         )
     }
 
-    // In-Game Gold Shop Dialog!
+    // In-Game Gold Shop Dialog
     if (isShopOpen && hud.status == GameStatus.PLAYING) {
         ShopDialog(
             theme = activeTheme,
@@ -514,6 +642,11 @@ fun GameScreen(
                 val cleared = world.clearTopDangerSand()
                 stageRef?.invalidate()
                 cleared > 0
+            },
+            onExecuteLavaStorm = {
+                val spawned = world.pourLavaShower()
+                stageRef?.invalidate()
+                spawned > 0
             },
             onPurchaseChanged = {
                 inventoryTick++
@@ -530,11 +663,18 @@ fun GameScreen(
         PauseDialog(
             theme = activeTheme,
             soundEnabled = prefs.soundEnabled,
+            musicEnabled = prefs.musicEnabled,
             hapticsEnabled = prefs.hapticsEnabled,
             onToggleSound = {
                 val next = !prefs.soundEnabled
                 prefs.soundEnabled = next
                 soundEngine.soundEnabled = next
+                inventoryTick++
+            },
+            onToggleMusic = {
+                val next = !prefs.musicEnabled
+                prefs.musicEnabled = next
+                soundEngine.updateMusicPreference(next)
                 inventoryTick++
             },
             onToggleHaptics = {
@@ -553,6 +693,7 @@ fun GameScreen(
             },
             onRestart = { restartGame(currentLevel) },
             onQuit = {
+                saveClassicIfActive()
                 if (currentLevel != null) onExitToAdventureMap() else onExitToMenu()
             }
         )
@@ -574,15 +715,30 @@ fun GameScreen(
         )
     }
 
-    // Game Over Dialog
+    // Game Over Dialog (with Coin Revive!)
     if (hud.status == GameStatus.GAME_OVER) {
+        val reviveCost = GamePreferences.REVIVE_BASE_COST * (revivesUsed + 1)
+        val canRevive = revivesUsed < 2 && currentCoins >= reviveCost
         GameOverDialog(
             theme = activeTheme,
+            modeTitle = currentLevel?.let { "Bölüm ${it.number}" } ?: currentMode.titleTr,
             score = hud.score,
-            bestScore = prefs.highScore,
+            bestScore = modeSavedHighScore(currentMode),
             isNewBest = isNewHighScore,
             earnedCoins = earnedSessionCoins,
             isAdventure = currentLevel != null,
+            showReviveOption = revivesUsed < 2,
+            reviveCost = reviveCost,
+            canAffordRevive = canRevive,
+            onRevive = {
+                if (prefs.spendCoins(reviveCost) && world.reviveContinue()) {
+                    revivesUsed++
+                    sessionFinalized = false
+                    soundEngine.playCoinPurchase()
+                    inventoryTick++
+                    stageRef?.resetCachedHud()
+                }
+            },
             onRetry = { restartGame(currentLevel) },
             onExit = {
                 if (currentLevel != null) onExitToAdventureMap() else onExitToMenu()
@@ -595,8 +751,10 @@ fun GameScreen(
 private fun PauseDialog(
     theme: GameTheme,
     soundEnabled: Boolean,
+    musicEnabled: Boolean,
     hapticsEnabled: Boolean,
     onToggleSound: () -> Unit,
+    onToggleMusic: () -> Unit,
     onToggleHaptics: () -> Unit,
     onOpenShop: () -> Unit,
     onResume: () -> Unit,
@@ -615,7 +773,7 @@ private fun PauseDialog(
                     .fillMaxWidth()
                     .padding(22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(11.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
                     text = "⏸ OYUN DURAKLATILDI",
@@ -626,17 +784,28 @@ private fun PauseDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    OutlinedButton(
+                        onClick = onToggleMusic,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = if (musicEnabled) "🎵 Müzik" else "🔕 Kapalı",
+                            color = Color.White,
+                            fontSize = 11.sp
+                        )
+                    }
                     OutlinedButton(
                         onClick = onToggleSound,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = if (soundEnabled) "🔊 Ses Açık" else "🔇 Ses Kapalı",
+                            text = if (soundEnabled) "🔊 Ses" else "🔇 Kapalı",
                             color = Color.White,
-                            fontSize = 12.sp
+                            fontSize = 11.sp
                         )
                     }
                     OutlinedButton(
@@ -645,9 +814,9 @@ private fun PauseDialog(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = if (hapticsEnabled) "📳 Titreşim Açık" else "📴 Kapalı",
+                            text = if (hapticsEnabled) "📳 Titreşim" else "📴 Kapalı",
                             color = Color.White,
-                            fontSize = 12.sp
+                            fontSize = 11.sp
                         )
                     }
                 }
@@ -694,7 +863,7 @@ private fun PauseDialog(
                         .height(48.dp),
                     shape = RoundedCornerShape(14.dp)
                 ) {
-                    Text("🏠 Çıkış Yap", color = Color.White.copy(alpha = 0.85f))
+                    Text("🏠 Kaydet & Çık", color = Color.White.copy(alpha = 0.85f))
                 }
             }
         }
@@ -809,11 +978,16 @@ private fun VictoryDialog(
 @Composable
 private fun GameOverDialog(
     theme: GameTheme,
+    modeTitle: String,
     score: Int,
     bestScore: Int,
     isNewBest: Boolean,
     earnedCoins: Int,
     isAdventure: Boolean,
+    showReviveOption: Boolean,
+    reviveCost: Int,
+    canAffordRevive: Boolean,
+    onRevive: () -> Unit,
     onRetry: () -> Unit,
     onExit: () -> Unit
 ) {
@@ -829,13 +1003,20 @@ private fun GameOverDialog(
                     .fillMaxWidth()
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(11.dp)
             ) {
                 Text(
                     text = if (isAdventure) "⏳ BÖLÜM BAŞARISIZ" else "💥 OYUN BİTTİ",
-                    fontSize = 22.sp,
+                    fontSize = 21.sp,
                     fontWeight = FontWeight.Black,
                     color = Color(theme.dangerLineColor)
+                )
+
+                Text(
+                    text = modeTitle,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.7f)
                 )
 
                 if (isNewBest) {
@@ -856,7 +1037,7 @@ private fun GameOverDialog(
 
                 Text(
                     text = "$score",
-                    fontSize = 38.sp,
+                    fontSize = 36.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.White
                 )
@@ -871,34 +1052,55 @@ private fun GameOverDialog(
 
                 if (earnedCoins > 0) {
                     Text(
-                        text = "Bu Oyunda Kazanılan Altın: 🪙 +$earnedCoins",
+                        text = "Kazanılan Altın: 🪙 +$earnedCoins",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFFFD166)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(4.dp))
+                if (showReviveOption) {
+                    Button(
+                        onClick = onRevive,
+                        enabled = canAffordRevive,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF06D6A0),
+                            contentColor = Color(0xFF081C15),
+                            disabledContainerColor = Color.White.copy(alpha = 0.10f),
+                            disabledContentColor = Color.White.copy(alpha = 0.42f)
+                        )
+                    ) {
+                        Text(
+                            text = "💖 İkinci Şansla Devam Et (🪙 $reviveCost)",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
 
                 Button(
                     onClick = onRetry,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
+                        .height(50.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = accent,
                         contentColor = Color.Black
                     )
                 ) {
-                    Text("🔄 Tekrar Oyna", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                    Text("🔄 Tekrar Oyna", fontWeight = FontWeight.ExtraBold, fontSize = 15.5.sp)
                 }
 
                 OutlinedButton(
                     onClick = onExit,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
+                        .height(46.dp),
                     shape = RoundedCornerShape(14.dp)
                 ) {
                     Text(

@@ -13,7 +13,7 @@ enum class BoosterType(
         id = "bomb",
         shortTitleTr = "TNT",
         titleTr = "TNT Bomba",
-        descTr = "Dokunduğun noktada dev bir krater patlatır ve taşları kırar.",
+        descTr = "Dokunduğun noktada dev bir krater patlatır, taş ve buzları kırar.",
         hintTr = "💣 Patlatmak istediğin alana dokun!",
         emoji = "💣",
         coinCost = 45
@@ -49,8 +49,8 @@ enum class BoosterType(
         id = "reroll_tray",
         shortTitleTr = "Yenile",
         titleTr = "Tepsi Yenile",
-        descTr = "Alttaki 3 bloğu anında yeni şekil ve renklerle değiştirir.",
-        hintTr = "🔄 Tepsideki 3 bloğu yeniler",
+        descTr = "Alttaki blokları anında yeni şekil ve renklerle değiştirir.",
+        hintTr = "🔄 Blokları yeniler",
         emoji = "🔄",
         coinCost = 30
     )
@@ -68,7 +68,15 @@ enum class TerrainPreset {
     CYBER_HOURGLASS,
     CRACKED_FORTRESS,
     PASTEL_TERRACES,
-    CROWN_LABYRINTH
+    CROWN_LABYRINTH,
+    VOLCANO_CALDERA,
+    MAGMA_CHAMBERS,
+    OBSIDIAN_ARCH,
+    ERUPTION_CORE,
+    FROST_WALL,
+    GLACIER_STEPS,
+    AURORA_SANCTUARY,
+    ETERNAL_THRONE
 }
 
 data class AdventureLevel(
@@ -90,8 +98,10 @@ data class AdventureLevel(
 )
 
 object AdventureCatalog {
+    const val MAX_LEVELS = 20
+
     val levels: List<AdventureLevel> = listOf(
-        // Bölge 1: Sahra Çölü
+        // Bölge 1: Sahra Çölü (1–3)
         AdventureLevel(
             number = 1,
             worldName = "Sahra Çölü",
@@ -105,7 +115,7 @@ object AdventureCatalog {
             maxMoves = 22,
             star2Score = 950,
             star3Score = 1400,
-            rewardCoins = 35,
+            rewardCoins = 40,
             rewardBooster = BoosterType.RAINBOW_UPGRADE,
             terrainPreset = TerrainPreset.NONE
         ),
@@ -144,7 +154,7 @@ object AdventureCatalog {
             terrainPreset = TerrainPreset.CRACKED_BRIDGE
         ),
 
-        // Bölge 2: Derin Okyanus
+        // Bölge 2: Derin Okyanus (4–6)
         AdventureLevel(
             number = 4,
             worldName = "Derin Okyanus",
@@ -197,7 +207,7 @@ object AdventureCatalog {
             terrainPreset = TerrainPreset.CRACKED_PYRAMID
         ),
 
-        // Bölge 3: Neon Gece
+        // Bölge 3: Neon Gece (7–9)
         AdventureLevel(
             number = 7,
             worldName = "Neon Gece",
@@ -229,7 +239,7 @@ object AdventureCatalog {
             star2Score = 4000,
             star3Score = 5200,
             rewardCoins = 85,
-            rewardBooster = BoosterType.BOMB,
+            rewardBooster = BoosterType.ROW_LASER,
             terrainPreset = TerrainPreset.CYBER_HOURGLASS
         ),
         AdventureLevel(
@@ -250,7 +260,7 @@ object AdventureCatalog {
             terrainPreset = TerrainPreset.CRACKED_FORTRESS
         ),
 
-        // Bölge 4: Pastel Rüya
+        // Bölge 4: Pastel Rüya (10–12)
         AdventureLevel(
             number = 10,
             worldName = "Pastel Rüya",
@@ -288,19 +298,159 @@ object AdventureCatalog {
         AdventureLevel(
             number = 12,
             worldName = "Pastel Rüya",
-            title = "SandBlock Tacı",
-            description = "Büyük final! Tüm çatlak taşları kır, 6 hat temizle ve 4.800 puana ulaş!",
+            title = "Rüya Labirenti",
+            description = "Tüm çatlak blokları kır ve 6 hat temizle!",
             theme = GameTheme.PASTEL,
             activeColors = 5,
-            targetScore = 4800,
+            targetScore = 4600,
             targetClears = 6,
             requireClearCrackedStones = true,
             maxMoves = 36,
-            star2Score = 6400,
-            star3Score = 8200,
-            rewardCoins = 150,
+            star2Score = 6200,
+            star3Score = 7800,
+            rewardCoins = 125,
             rewardBooster = BoosterType.BOMB,
             terrainPreset = TerrainPreset.CROWN_LABYRINTH
+        ),
+
+        // Bölge 5: Volkanik Magma (13–16)
+        AdventureLevel(
+            number = 13,
+            worldName = "Volkanik Magma",
+            title = "Krater Ağzı",
+            description = "Volkanik kaldera çukurunda kumları birleştirerek 6 hat temizle.",
+            theme = GameTheme.VOLCANO,
+            activeColors = 5,
+            targetScore = 5000,
+            targetClears = 6,
+            requireClearCrackedStones = false,
+            maxMoves = 36,
+            star2Score = 6600,
+            star3Score = 8400,
+            rewardCoins = 130,
+            rewardBooster = BoosterType.REROLL_TRAY,
+            terrainPreset = TerrainPreset.VOLCANO_CALDERA
+        ),
+        AdventureLevel(
+            number = 14,
+            worldName = "Volkanik Magma",
+            title = "Magma Odaları",
+            description = "Obsidyen bölmelerdeki tüm çatlak kayaları parçala!",
+            theme = GameTheme.VOLCANO,
+            activeColors = 5,
+            targetScore = 5400,
+            targetClears = 6,
+            requireClearCrackedStones = true,
+            maxMoves = 36,
+            star2Score = 7000,
+            star3Score = 9000,
+            rewardCoins = 140,
+            rewardBooster = BoosterType.ROW_LASER,
+            terrainPreset = TerrainPreset.MAGMA_CHAMBERS
+        ),
+        AdventureLevel(
+            number = 15,
+            worldName = "Volkanik Magma",
+            title = "Obsidyen Kemer",
+            description = "Dev obsidyen kemerin altından kum akıtarak 7 hat temizle.",
+            theme = GameTheme.VOLCANO,
+            activeColors = 5,
+            targetScore = 5800,
+            targetClears = 7,
+            requireClearCrackedStones = false,
+            maxMoves = 38,
+            star2Score = 7600,
+            star3Score = 9600,
+            rewardCoins = 150,
+            rewardBooster = null,
+            terrainPreset = TerrainPreset.OBSIDIAN_ARCH
+        ),
+        AdventureLevel(
+            number = 16,
+            worldName = "Volkanik Magma",
+            title = "Yanardağ Çekirdeği",
+            description = "Magma çekirdeğindeki tüm çatlak taş ve buz engelleri yok et!",
+            theme = GameTheme.VOLCANO,
+            activeColors = 5,
+            targetScore = 6200,
+            targetClears = 7,
+            requireClearCrackedStones = true,
+            maxMoves = 38,
+            star2Score = 8200,
+            star3Score = 10400,
+            rewardCoins = 165,
+            rewardBooster = BoosterType.BOMB,
+            terrainPreset = TerrainPreset.ERUPTION_CORE
+        ),
+
+        // Bölge 6: Kuzey Işıkları — Buzul Zirvesi (17–20)
+        AdventureLevel(
+            number = 17,
+            worldName = "Kuzey Işıkları",
+            title = "Buzul Duvarı",
+            description = "2 katmanlı 🧊 Buz Bloklarının yanında hat temizleyerek buzları erit!",
+            theme = GameTheme.AURORA,
+            activeColors = 5,
+            targetScore = 6600,
+            targetClears = 7,
+            requireClearCrackedStones = true,
+            maxMoves = 38,
+            star2Score = 8600,
+            star3Score = 11000,
+            rewardCoins = 175,
+            rewardBooster = BoosterType.RAINBOW_UPGRADE,
+            terrainPreset = TerrainPreset.FROST_WALL
+        ),
+        AdventureLevel(
+            number = 18,
+            worldName = "Kuzey Işıkları",
+            title = "Kristal Merdiven",
+            description = "Buzul basamaklarını eriterek 7 hat ve 7.200 puana ulaş!",
+            theme = GameTheme.AURORA,
+            activeColors = 5,
+            targetScore = 7200,
+            targetClears = 7,
+            requireClearCrackedStones = true,
+            maxMoves = 40,
+            star2Score = 9400,
+            star3Score = 11800,
+            rewardCoins = 185,
+            rewardBooster = BoosterType.COLOR_CLEANER,
+            terrainPreset = TerrainPreset.GLACIER_STEPS
+        ),
+        AdventureLevel(
+            number = 19,
+            worldName = "Kuzey Işıkları",
+            title = "Aurora Tapınağı",
+            description = "Buz ve taş tapınakta 8 hat temizleyerek tüm buzulları kır!",
+            theme = GameTheme.AURORA,
+            activeColors = 5,
+            targetScore = 7800,
+            targetClears = 8,
+            requireClearCrackedStones = true,
+            maxMoves = 40,
+            star2Score = 10200,
+            star3Score = 12800,
+            rewardCoins = 200,
+            rewardBooster = BoosterType.ROW_LASER,
+            terrainPreset = TerrainPreset.AURORA_SANCTUARY
+        ),
+        AdventureLevel(
+            number = 20,
+            worldName = "Kuzey Işıkları",
+            title = "Sonsuzluk Tacı",
+            description = "Büyük Final! Tüm buzul ve çatlak kayaları yok et, 8.500 puana ulaş!",
+            theme = GameTheme.AURORA,
+            activeColors = 5,
+            targetScore = 8500,
+            targetClears = 8,
+            requireClearCrackedStones = true,
+            maxMoves = 42,
+            star2Score = 11200,
+            star3Score = 14000,
+            rewardCoins = 250,
+            rewardBooster = BoosterType.BOMB,
+            terrainPreset = TerrainPreset.ETERNAL_THRONE
         )
     )
 
